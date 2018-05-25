@@ -1,11 +1,21 @@
 use std::fmt;
 
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+#[derive(Clone, Copy, Default, PartialEq)]
 struct Point {
     elements: [f64; 4],
 }
 
+#[derive(Clone, Copy, Default, PartialEq)]
 struct Color {
     elements: [f64; 4],
+}
+
+#[derive(Clone, Copy, Default, PartialEq)]
+struct Ray {
+    a: Point,
+    b: Point,
 }
 
 impl Point {
@@ -66,7 +76,39 @@ impl Color {
 
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {}", self.r(), self.g(), self.b())
+        write!(
+            f,
+            "{} {} {}",
+            self.r() as i64,
+            self.g() as i64,
+            self.b() as i64
+        )
+    }
+}
+
+impl Add for Point {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Point::init(
+            self.x() + rhs.x(),
+            self.y() + rhs.y(),
+            self.z() + rhs.z(),
+            1.0,
+        )
+    }
+}
+
+impl Mul<f64> for Point {
+    type Output = Self;
+
+    fn mul(self, scale: f64) -> Self {
+        Point::init(
+            self.x() * scale,
+            self.y() * scale,
+            self.z() * scale,
+            self.w(),
+        )
     }
 }
 
