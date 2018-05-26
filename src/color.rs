@@ -7,11 +7,7 @@ pub struct Color {
 
 /// naked impls
 impl Color {
-    pub fn new() -> Self {
-        Color { elements: [1.0; 4] }
-    }
-
-    pub fn init(r: f64, g: f64, b: f64, a: f64) -> Self {
+    pub fn new(r: f64, g: f64, b: f64, a: f64) -> Self {
         Color {
             elements: [r, g, b, a],
         }

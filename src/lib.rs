@@ -14,10 +14,11 @@ pub fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
     format!("P3\n{} {}\n{}\n", w, h, max)
 }
 
-pub fn write_image<F>(f: F, name: &str) -> std::io::Result<usize>
+pub fn write_image<F>(f: F, name: &str) -> std::io::Result<(usize, usize)>
 where
-    F: FnOnce(File) -> usize,
+    F: Fn(File) -> (usize, usize),
 {
-    let mut file = File::create(name)?;
+    let file = File::create(name)?;
+
     Ok(f(file))
 }
