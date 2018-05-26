@@ -83,12 +83,7 @@ impl Mul<Point> for f64 {
     type Output = Point;
 
     fn mul(self, point: Point) -> Point {
-        Point::new(
-            point.x() * self,
-            point.y() * self,
-            point.z() * self,
-            point.w(),
-        )
+        point * self
     }
 }
 

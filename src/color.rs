@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Color {
@@ -36,6 +37,96 @@ impl fmt::Display for Color {
             self.r() as i64,
             self.g() as i64,
             self.b() as i64
+        )
+    }
+}
+
+/// Trait impls here.
+impl Add for Color {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Color::new(
+            self.r() + rhs.r(),
+            self.g() + rhs.g(),
+            self.b() + rhs.b(),
+            1.0,
+        )
+    }
+}
+
+impl Sub for Color {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        Color::new(
+            self.r() - rhs.r(),
+            self.g() - rhs.g(),
+            self.b() - rhs.b(),
+            1.0,
+        )
+    }
+}
+
+/// Color * f64
+impl Mul<f64> for Color {
+    type Output = Self;
+
+    fn mul(self, scale: f64) -> Self {
+        Color::new(
+            self.r() * scale,
+            self.g() * scale,
+            self.b() * scale,
+            self.a(),
+        )
+    }
+}
+
+/// f64 * Color
+impl Mul<Color> for f64 {
+    type Output = Color;
+
+    fn mul(self, color: Color) -> Color {
+        color * self
+    }
+}
+
+/// Color * Color
+impl Mul<Color> for Color {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Color::new(
+            self.r() * rhs.r(),
+            self.g() * rhs.g(),
+            self.b() * rhs.b(),
+            self.a(),
+        )
+    }
+}
+
+impl Div<f64> for Color {
+    type Output = Self;
+
+    fn div(self, scale: f64) -> Self {
+        Color::new(
+            self.r() / scale,
+            self.g() / scale,
+            self.b() / scale,
+            self.a(),
+        )
+    }
+}
+
+impl Div<Color> for Color {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self {
+        Color::new(
+            self.r() / rhs.r(),
+            self.g() / rhs.g(),
+            self.b() / rhs.b(),
+            self.a(),
         )
     }
 }

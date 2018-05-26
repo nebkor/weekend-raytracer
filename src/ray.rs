@@ -12,10 +12,6 @@ impl Ray {
     }
 
     pub fn direction(&self) -> Point {
-        self.b
-    }
-
-    pub fn joe_direction(&self) -> Point {
         self.b - self.a
     }
 

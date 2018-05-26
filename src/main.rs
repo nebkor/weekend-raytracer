@@ -1,12 +1,24 @@
 extern crate raytracer;
 
-use raytracer::{make_ppm_header, write_image, Color, File, Write};
+use raytracer::{make_ppm_header, write_image, Color, File, Point, Ray, Write};
+
+fn color(r: Ray) -> Color {
+    let unit = r.direction().unit();
+    let t = 0.5 * (unit.y() + 1.);
+    // interpolate between blue at the top and white at the bottom
+    (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
+}
 
 fn main() {
     let nx = 800;
     let ny = 400;
     let maxval = 255;
     let sf = 255.99; // scaling factor for RGB vals in PPM
+
+    let lower_left_corner = Point::new(-2., -1., -1., 0.);
+    let horizontal = Point::new(4., 0., 0., 0.);
+    let vertical = Point::new(0., 2., 0., 0.);
+    let origin = Point::new(0., 0., 0., 0.);
 
     let testppm = |mut f: File| {
         // this is bogus; the panic in the else branch is masking its later use
