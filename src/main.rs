@@ -20,14 +20,14 @@ fn main() {
     let vertical = Point::new(0., 2., 0., 0.);
     let origin = Point::new(0., 0., 0., 0.);
 
-    let testppm = |mut f: File| {
+    let bluesky = |mut f: File| {
         // this is bogus; the panic in the else branch is masking its later use
         #[allow(unused_assignments)]
         let mut count: usize = 0;
         let mut err: usize = 0;
 
+        // handle header logic, bail if it fails
         let header = make_ppm_header(nx, ny, maxval);
-
         match f.write_all(header.as_bytes()) {
             Ok(_) => {
                 count = 3;
@@ -36,23 +36,25 @@ fn main() {
                 panic!("no hed, we r ded");
             }
         }
-
+        // Now the real rendering work:
         for j in (0..ny).rev() {
             for i in 0..nx {
-                let r = i as f64 / nx as f64;
-                let g = j as f64 / ny as f64;
-                let b = 0.5 * sf;
+                let u = i as f64 / nx as f64;
+                let v = j as f64 / ny as f64;
+                let d = lower_left_corner + (u * horizontal) + (v * vertical);
+                let r = Ray::new(origin, d);
+                let c = color(r) * sf;
 
-                match f.write_all(format!("{}\n", Color::new(r * sf, g * sf, b, 1.)).as_bytes()) {
+                match f.write_all(format!("{}\n", c).as_bytes()) {
                     Err(_) => err += 1,
                     Ok(_) => count += 1,
                 };
             }
         }
         (count, err)
-    };
+    }; // end closure def
 
-    match write_image(testppm, "test.ppm") {
+    match write_image(bluesky, "bluesky.ppm") {
         Ok(n) => println!("Wrote {} lines, and didn't write {} lines.", n.0, n.1),
         Err(e) => println!("Oh noes, something went wrong. {:?}", e),
     }
