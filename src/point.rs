@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Our point is, at heart, an array of four 64-bit floats.
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     elements: [f64; 4],
 }
@@ -34,6 +34,21 @@ impl Point {
 
     pub fn unit(&self) -> Self {
         self.clone() / self.len()
+    }
+
+    pub fn dot(&self, rhs: &Point) -> f64 {
+        self.x() * rhs.x() + self.y() * rhs.y() + self.z() + rhs.z()
+    }
+
+    pub fn cross(&self, rhs: &Point) -> Point {
+        // for 3-vectors A and B, A cross B =
+        // Vec3(AyBz - AzBy, AzBx - AxBz, AxBy - AyBx)
+        Point::new(
+            self.y() * rhs.z() - self.z() * rhs.y(),
+            self.z() * rhs.x() - self.x() * rhs.z(),
+            self.x() * rhs.y() - self.y() * rhs.x(),
+            self.w(),
+        )
     }
 }
 
