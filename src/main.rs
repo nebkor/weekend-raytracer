@@ -2,11 +2,28 @@ extern crate raytracer;
 
 use raytracer::{make_ppm_header, write_image, Color, File, Point, Ray, Write};
 
-fn color(r: Ray) -> Color {
-    let unit = r.direction().unit();
-    let t = 0.5 * (unit.y() + 1.);
-    // interpolate between blue at the top and white at the bottom
-    (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
+fn hit_sphere(center: &Point, radius: f64, ray: &Ray) -> bool {
+    let oc = ray.origin() - *center;
+    let rd = ray.direction();
+    // a, b, c correspond to quadratic equation terms
+    let a = rd.len().powi(2); // dot-product with own direction vector
+    let b = 2.0 * oc.dot(&rd);
+    let c = oc.len().powi(2) - radius.powi(2);
+    let disc = b.powi(2) - 4.0 * a * c; // b^2 -4ac
+    disc > 0.0
+}
+
+fn color(r: &Ray) -> Color {
+    let center = Point::new(0.0, 0.0, 6.0, 0.0);
+
+    if hit_sphere(&center, 0.5, r) {
+        Color::new(1.0, 0., 0., 1.)
+    } else {
+        let unit = r.direction().unit();
+        let t = 0.5 * (unit.y() + 1.);
+        // interpolate between blue at the top and white at the bottom
+        (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
+    }
 }
 
 fn main() {
@@ -43,7 +60,7 @@ fn main() {
                 let v = j as f64 / ny as f64;
                 let d = lower_left_corner + (u * horizontal) + (v * vertical);
                 let r = Ray::new(origin, d);
-                let c = color(r) * sf;
+                let c = color(&r) * sf;
 
                 match f.write_all(format!("{}\n", c).as_bytes()) {
                     Err(_) => err += 1,
