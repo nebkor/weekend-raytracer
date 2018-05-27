@@ -4,33 +4,34 @@ use raytracer::{make_ppm_header, write_image, Color, File, Point, Ray, Write};
 
 fn hit_sphere(center: &Point, radius: f64, ray: &Ray) -> f64 {
     let oc = ray.origin() - *center;
+
     let rd = ray.direction();
     // a, b, c correspond to quadratic equation terms
-    let a = rd.len().powi(2); // dot-product with own direction vector
+    let a = rd.self_dot();
     let b = 2.0 * oc.dot(&rd);
-    let c = oc.len().powi(2) - radius.powi(2);
-    let disc = b.powi(2) - 4.0 * a * c; // b^2 -4ac
+    let c = oc.self_dot() - radius.powi(2);
+    let disc = b * b - 4.0 * a * c; // b^2 -4ac
     if disc < 0.0 {
         -1.0
     } else {
-        (-b - disc.sqrt()) / 2.0 * a
+        (-b - disc.sqrt()) / (2.0 * a)
     }
 }
 
 fn color(r: &Ray) -> Color {
-    let center = Point::new(0.0, 0.0, 6.0, 0.0);
+    let center = Point::new(0.0, 0.0, -1., 0.0);
 
     let t = hit_sphere(&center, 0.5, r);
 
     if t > 0.0 {
-        let n: Point = r.pt_at_param(t) - center;
+        let n: Point = (r.pt_at_param(t) - center).unit();
         0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1., 1.0)
     } else {
         let unit = r.direction().unit();
         let t = 0.5 * (unit.y() + 1.);
         // interpolate between blue at the top and white at the bottom
-        //(1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
-        Color::new(0.0, 0.0, 0.0, 1.0)
+        (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
+        //Color::new(0.0, 0.0, 0.0, 1.0)
     }
 }
 
