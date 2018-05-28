@@ -6,6 +6,17 @@ pub struct Ray {
     b: Point,
 }
 
+#[derive(Clone, Copy)]
+pub struct HitRecord {
+    pub t: f64,
+    pub p: Point,
+    pub n: Point,
+}
+
+pub trait Glimmer<T> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool;
+}
+
 impl Ray {
     pub fn new(a: Point, b: Point) -> Self {
         Ray { a, b }

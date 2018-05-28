@@ -1,20 +1,21 @@
 extern crate raytracer;
 
-use raytracer::{make_ppm_header, write_image, Color, File, Point, Ray, Write};
+use raytracer::{make_ppm_header, write_image, Color, Glimmer, HitRecord, Point, Ray};
+use std::io::Write;
+use std::fs::File;
 
-fn hit_sphere(center: &Point, radius: f64, ray: &Ray) -> f64 {
-    let oc = ray.origin() - *center;
-
-    let rd = ray.direction();
-    // a, b, c correspond to quadratic equation terms
-    let a = rd.self_dot();
-    let b = 2.0 * oc.dot(&rd);
-    let c = oc.self_dot() - radius.powi(2);
-    let disc = b * b - 4.0 * a * c; // b^2 -4ac
-    if disc < 0.0 {
-        -1.0
-    } else {
-        (-b - disc.sqrt()) / (2.0 * a)
+impl Glimmer<T> for Vec<T> where T: Glimmer {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let mut hr: HitRecord;
+        let mut glimmered = false;
+        let current_closest = t_max;
+        for thing in self.iter() {
+            if thing.hit(r, t_min, current_closest, hr) {
+                glimmered = true;
+                current_closest = hr.t;
+                std::mem::swap(mut& hr, record);
+            }
+        }
     }
 }
 
