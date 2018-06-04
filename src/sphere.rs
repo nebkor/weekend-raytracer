@@ -33,16 +33,16 @@ impl Glimmer for Sphere {
         let c = oc.self_dot() - self.radius_.powi(2);
         let disc = b.powi(2) - (a * c); // b^2 - ac
         if disc > 0.0 {
-            let temp = -b - disc.sqrt() / a;
-            if temp < t_max && temp >= t_min {
+            let temp = (-b - disc.sqrt()) / a;
+            if temp < t_max && temp > t_min {
                 let p = r.pt_at_param(temp);
-                let n = p - *self.center();
+                let n = (p - *self.center()) / self.radius_;
                 Some(HitRecord::new(temp, p, n))
             } else {
-                let temp = -b + disc.sqrt() / a;
+                let temp = (-b + disc.sqrt()) / a;
                 if temp < t_max && temp >= t_min {
                     let p = r.pt_at_param(temp);
-                    let n = p - *self.center();
+                    let n = (p - *self.center()) / self.radius_;
                     Some(HitRecord::new(temp, p, n))
                 } else {
                     None
