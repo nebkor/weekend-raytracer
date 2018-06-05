@@ -1,37 +1,20 @@
 extern crate raytracer;
 
-use raytracer::{make_ppm_header, write_image, Color, File, Point, Ray, Write};
+use raytracer::{make_ppm_header, write_image, Color, Glimmer, Point, Ray, Sphere, World};
+use std::fs::File;
+use std::io::Write;
 
-fn hit_sphere(center: &Point, radius: f64, ray: &Ray) -> f64 {
-    let oc = ray.origin() - *center;
-
-    let rd = ray.direction();
-    // a, b, c correspond to quadratic equation terms
-    let a = rd.self_dot();
-    let b = 2.0 * oc.dot(&rd);
-    let c = oc.self_dot() - radius.powi(2);
-    let disc = b * b - 4.0 * a * c; // b^2 -4ac
-    if disc < 0.0 {
-        -1.0
-    } else {
-        (-b - disc.sqrt()) / (2.0 * a)
-    }
-}
-
-fn color(r: &Ray) -> Color {
-    let center = Point::new(0.0, 0.0, -1., 0.0);
-
-    let t = hit_sphere(&center, 0.5, r);
-
-    if t > 0.0 {
-        let n: Point = (r.pt_at_param(t) - center).unit();
-        0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1., 1.0)
+fn color<T>(r: &Ray, world: &World<T>) -> Color
+where
+    T: Glimmer,
+{
+    if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
+        0.5 * Color::new(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1., 1.0)
     } else {
         let unit = r.direction().unit();
         let t = 0.5 * (unit.y() + 1.);
         // interpolate between blue at the top and white at the bottom
         (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
-        //Color::new(0.0, 0.0, 0.0, 1.0)
     }
 }
 
@@ -45,6 +28,11 @@ fn main() {
     let horizontal = Point::new(4., 0., 0., 0.);
     let vertical = Point::new(0., 2., 0., 0.);
     let origin = Point::new(0., 0., 0., 0.);
+
+    let world = World::new(vec![
+        Sphere::new(Point::new(0.0, 0.0, -1.0, 0.0), 0.5),
+        Sphere::new(Point::new(0.0, -100.5, -1.0, 0.0), 100.0),
+    ]);
 
     let bluesky = |mut f: File| {
         // this is bogus; the panic in the else branch is masking its later use
@@ -69,7 +57,7 @@ fn main() {
                 let v = j as f64 / ny as f64;
                 let d = lower_left_corner + (u * horizontal) + (v * vertical);
                 let r = Ray::new(origin, d);
-                let c = color(&r) * sf;
+                let c = color(&r, &world) * sf;
 
                 match f.write_all(format!("{}\n", c).as_bytes()) {
                     Err(_) => err += 1,
