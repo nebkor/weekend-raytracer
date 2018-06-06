@@ -1,5 +1,7 @@
+extern crate rand;
 extern crate raytracer;
 
+use rand::prelude::*;
 use raytracer::{make_ppm_header, write_image, Color, Glimmer, Point, Ray, Sphere, World};
 use std::fs::File;
 use std::io::Write;
@@ -9,12 +11,12 @@ where
     T: Glimmer,
 {
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
-        0.5 * Color::new(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1., 1.0)
+        0.5 * Color::c3(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1.)
     } else {
         let unit = r.direction().unit();
         let t = 0.5 * (unit.y() + 1.);
         // interpolate between blue at the top and white at the bottom
-        (1. - t) * Color::new(1., 1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0, 1.0)
+        (1. - t) * Color::c3(1., 1., 1.) + t * Color::c3(0.5, 0.7, 1.0)
     }
 }
 
@@ -24,14 +26,16 @@ fn main() {
     let maxval = 255;
     let sf = 255.99; // scaling factor for RGB vals in PPM
 
-    let lower_left_corner = Point::new(-2., -1., -1., 0.);
-    let horizontal = Point::new(4., 0., 0., 0.);
-    let vertical = Point::new(0., 2., 0., 0.);
-    let origin = Point::new(0., 0., 0., 0.);
+    let mut rng = thread_rng();
+
+    let lower_left_corner = Point::p3(-2.0, -1.0, -1.0);
+    let horizontal = Point::p3(4.0, 0.0, 0.0);
+    let vertical = Point::p3(0.0, 2.0, 0.0);
+    let origin = Point::p3(0.0, 0.0, 0.0);
 
     let world = World::new(vec![
-        Sphere::new(Point::new(0.0, 0.0, -1.0, 0.0), 0.5),
-        Sphere::new(Point::new(0.0, -100.5, -1.0, 0.0), 100.0),
+        Sphere::new(Point::p3(0.0, 0.0, -1.0), 0.5),
+        Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ]);
 
     let bluesky = |mut f: File| {

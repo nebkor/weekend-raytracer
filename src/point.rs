@@ -15,6 +15,12 @@ impl Point {
         }
     }
 
+    pub fn p3(x: f64, y: f64, z: f64) -> Self {
+        Point {
+            elements: [x, y, z, 0.0],
+        }
+    }
+
     pub fn x(&self) -> f64 {
         self.elements[0]
     }

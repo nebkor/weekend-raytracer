@@ -14,6 +14,12 @@ impl Color {
         }
     }
 
+    pub fn c3(r: f64, g: f64, b: f64) -> Self {
+        Color {
+            elements: [r, g, b, 1.0],
+        }
+    }
+
     pub fn r(&self) -> f64 {
         self.elements[0]
     }
