@@ -2,14 +2,11 @@ extern crate rand;
 extern crate raytracer;
 
 use rand::prelude::*;
-use raytracer::{make_ppm_header, write_image, Color, Glimmer, Point, Ray, Sphere, World};
+use raytracer::{make_ppm_header, write_image, Camera, Color, Glimmer, Point, Ray, Sphere, World};
 use std::fs::File;
 use std::io::Write;
 
-fn color<T>(r: &Ray, world: &World<T>) -> Color
-where
-    T: Glimmer,
-{
+fn color<T: Glimmer>(r: &Ray, world: &World<T>) -> Color {
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
         0.5 * Color::c3(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1.)
     } else {
@@ -21,17 +18,13 @@ where
 }
 
 fn main() {
-    let nx = 800;
-    let ny = 400;
+    let nx = 200;
+    let ny = 100;
+    let ns = 100;
     let maxval = 255;
     let sf = 255.99; // scaling factor for RGB vals in PPM
 
-    let mut rng = thread_rng();
-
-    let lower_left_corner = Point::p3(-2.0, -1.0, -1.0);
-    let horizontal = Point::p3(4.0, 0.0, 0.0);
-    let vertical = Point::p3(0.0, 2.0, 0.0);
-    let origin = Point::p3(0.0, 0.0, 0.0);
+    let cam = Camera::default();
 
     let world = World::new(vec![
         Sphere::new(Point::p3(0.0, 0.0, -1.0), 0.5),
@@ -43,6 +36,8 @@ fn main() {
         #[allow(unused_assignments)]
         let mut count: usize = 0;
         let mut err: usize = 0;
+
+        let mut rng = thread_rng();
 
         // handle header logic, bail if it fails
         let header = make_ppm_header(nx, ny, maxval);
@@ -57,12 +52,16 @@ fn main() {
         // Now the real rendering work:
         for j in (0..ny).rev() {
             for i in 0..nx {
-                let u = i as f64 / nx as f64;
-                let v = j as f64 / ny as f64;
-                let d = lower_left_corner + (u * horizontal) + (v * vertical);
-                let r = Ray::new(origin, d);
-                let c = color(&r, &world) * sf;
+                let mut col = Color::c3(0.0, 0.0, 0.0);
+                for _s in 0..ns {
+                    let u = (i as f64 + rng.gen::<f64>()) / nx as f64;
+                    let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
+                    let r = cam.ray(u, v);
+                    // let p = r.pt_at_param(2.0);
+                    col = col + color(&r, &world);
+                }
 
+                let c = (col / ns as f64) * sf;
                 match f.write_all(format!("{}\n", c).as_bytes()) {
                     Err(_) => err += 1,
                     Ok(_) => count += 1,

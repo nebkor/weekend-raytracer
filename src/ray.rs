@@ -24,10 +24,7 @@ pub trait Glimmer {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-pub struct World<T>
-where
-    T: Glimmer,
-{
+pub struct World<T: Glimmer> {
     w: Vec<T>,
 }
 
