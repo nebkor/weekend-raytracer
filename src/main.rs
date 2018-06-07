@@ -11,7 +11,7 @@ mod color;
 use color::Color;
 
 mod ray;
-use ray::{Glimmer, Ray, World};
+use ray::{Glimmer, HitRecord, Ray};
 
 #[allow(dead_code)]
 mod sphere;
@@ -20,6 +20,20 @@ use sphere::Sphere;
 #[allow(dead_code)]
 mod camera;
 use camera::Camera;
+
+impl<T: Glimmer> Glimmer for Vec<T> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut record: Option<HitRecord> = None;
+        let mut current_closest = t_max;
+        for thing in self.iter() {
+            if let Some(hr) = thing.hit(r, t_min, current_closest) {
+                current_closest = hr.t;
+                std::mem::swap(&mut Some(hr), &mut record);
+            }
+        }
+        record
+    }
+}
 
 fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
     format!("P3\n{} {}\n{}\n", w, h, max)
@@ -34,7 +48,7 @@ where
     Ok(f(file))
 }
 
-fn color<T: Glimmer>(r: &Ray, world: &World<T>) -> Color {
+fn color<T: Glimmer>(r: &Ray, world: &Vec<T>) -> Color {
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
         0.5 * Color::c3(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1.)
     } else {
@@ -54,10 +68,10 @@ fn main() {
 
     let cam = Camera::default();
 
-    let world = World::new(vec![
+    let world = vec![
         Sphere::new(Point::p3(0.0, 0.0, -1.0), 0.5),
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
-    ]);
+    ];
 
     let bluesky = |mut f: File| {
         // this is bogus; the panic in the else branch is masking its later use
