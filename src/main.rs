@@ -124,5 +124,8 @@ fn main() {
         }
     }
 
-    println!("Wrote {} lines, and didn't write {} lines.", count, err);
+    println!(
+        "Wrote {} lines, and didn't write {} lines, to {:?}.",
+        count, err, file
+    );
 }
