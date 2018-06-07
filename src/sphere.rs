@@ -24,7 +24,7 @@ impl Sphere {
 }
 
 impl Glimmer for Sphere {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms
