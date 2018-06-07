@@ -1,10 +1,38 @@
 extern crate rand;
-extern crate raytracer;
-
 use rand::prelude::*;
-use raytracer::{make_ppm_header, write_image, Camera, Color, Glimmer, Point, Ray, Sphere, World};
+
 use std::fs::File;
 use std::io::Write;
+
+mod point;
+use point::Point;
+
+mod color;
+use color::Color;
+
+mod ray;
+use ray::{Glimmer, Ray, World};
+
+#[allow(dead_code)]
+mod sphere;
+use sphere::Sphere;
+
+#[allow(dead_code)]
+mod camera;
+use camera::Camera;
+
+fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
+    format!("P3\n{} {}\n{}\n", w, h, max)
+}
+
+fn write_image<F>(f: F, name: &str) -> std::io::Result<(usize, usize)>
+where
+    F: Fn(File) -> (usize, usize),
+{
+    let file = File::create(name)?;
+
+    Ok(f(file))
+}
 
 fn color<T: Glimmer>(r: &Ray, world: &World<T>) -> Color {
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
@@ -18,8 +46,8 @@ fn color<T: Glimmer>(r: &Ray, world: &World<T>) -> Color {
 }
 
 fn main() {
-    let nx = 200;
-    let ny = 100;
+    let nx = 800;
+    let ny = 400;
     let ns = 100;
     let maxval = 255;
     let sf = 255.99; // scaling factor for RGB vals in PPM

@@ -5,3 +5,6 @@ authors = ["Joe Ardent <code@ardent.nebcorp.com>"]
 
 [dependencies]
 rand = "0.5"
+
+[profile.dev]
+opt-level = 3
