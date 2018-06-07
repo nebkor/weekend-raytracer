@@ -39,15 +39,6 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
     format!("P3\n{} {}\n{}\n", w, h, max)
 }
 
-fn write_image<F>(f: F, name: &str) -> std::io::Result<(usize, usize)>
-where
-    F: Fn(File) -> (usize, usize),
-{
-    let file = File::create(name)?;
-
-    Ok(f(file))
-}
-
 fn color<T: Glimmer>(r: &Ray, world: &Vec<T>) -> Color {
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
         0.5 * Color::c3(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1.)
@@ -73,48 +64,48 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let bluesky = |mut f: File| {
-        // this is bogus; the panic in the else branch is masking its later use
-        #[allow(unused_assignments)]
-        let mut count: usize = 0;
-        let mut err: usize = 0;
+    // this is bogus; the panic in the else branch is masking its later use
+    #[allow(unused_assignments)]
+    let mut count: usize = 0;
 
-        let mut rng = thread_rng();
+    let mut err: usize = 0;
+    let mut rng = thread_rng();
 
-        // handle header logic, bail if it fails
-        let header = make_ppm_header(nx, ny, maxval);
-        match f.write_all(header.as_bytes()) {
-            Ok(_) => {
-                count = 3;
-            }
-            Err(_) => {
-                panic!("no hed, we r ded");
-            }
+    let mut file = match File::create("scene.ppm") {
+        Ok(f) => f,
+        Err(e) => panic!(format!("got {:?} we r ded", e)),
+    };
+
+    // handle header logic, bail if it fails
+    let header = make_ppm_header(nx, ny, maxval);
+    match file.write_all(header.as_bytes()) {
+        Ok(_) => {
+            count = 3;
         }
-        // Now the real rendering work:
-        for j in (0..ny).rev() {
-            for i in 0..nx {
-                let mut col = Color::c3(0.0, 0.0, 0.0);
-                for _s in 0..ns {
-                    let u = (i as f64 + rng.gen::<f64>()) / nx as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
-                    let r = cam.ray(u, v);
-                    // let p = r.pt_at_param(2.0);
-                    col = col + color(&r, &world);
-                }
-
-                let c = (col / ns as f64) * sf;
-                match f.write_all(format!("{}\n", c).as_bytes()) {
-                    Err(_) => err += 1,
-                    Ok(_) => count += 1,
-                };
-            }
+        Err(_) => {
+            panic!("no hed, we r ded");
         }
-        (count, err)
-    }; // end closure def
+    };
 
-    match write_image(bluesky, "bluesky.ppm") {
-        Ok(n) => println!("Wrote {} lines, and didn't write {} lines.", n.0, n.1),
-        Err(e) => println!("Oh noes, something went wrong. {:?}", e),
+    // Now the real rendering work:
+    for j in (0..ny).rev() {
+        for i in 0..nx {
+            let mut col = Color::c3(0.0, 0.0, 0.0);
+            for _s in 0..ns {
+                let u = (i as f64 + rng.gen::<f64>()) / nx as f64;
+                let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
+                let r = cam.ray(u, v);
+                // let p = r.pt_at_param(2.0);
+                col = col + color(&r, &world);
+            }
+
+            let c = (col / ns as f64) * sf;
+            match file.write_all(format!("{}\n", c).as_bytes()) {
+                Err(_) => err += 1,
+                Ok(_) => count += 1,
+            };
+        }
     }
+
+    println!("Wrote {} lines, and didn't write {} lines.", count, err);
 }
