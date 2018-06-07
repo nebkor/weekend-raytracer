@@ -39,9 +39,27 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
     format!("P3\n{} {}\n{}\n", w, h, max)
 }
 
-fn color<T: Glimmer>(r: &Ray, world: &Vec<T>) -> Color {
-    if let Some(rec) = world.glimmer(r, 0.0, std::f64::MAX) {
-        0.5 * Color::c3(rec.n.x() + 1., rec.n.y() + 1., rec.n.z() + 1.)
+fn random_unit_point(r: &mut ThreadRng) -> Point {
+    let mut p: Point;
+    loop {
+        p = 2.0 * Point::p3(r.gen(), r.gen(), r.gen()) - Point::p3(1.0, 1.0, 1.0);
+        if p.len().powi(2) < 1.0 {
+            break;
+        }
+    }
+    p
+}
+
+fn color<T: Glimmer>(r: &Ray, world: &Vec<T>, rng: &mut ThreadRng) -> Color {
+    if let Some(rec) = world.glimmer(r, 0.001, std::f64::MAX) {
+        let target = rec.p + rec.n + random_unit_point(rng);
+        // twiddle the factor on the RHS of the less-than for more or less
+        // recursion (higher factor is less recursion, more original color)
+        if rng.gen::<f64>() < 0.3 {
+            Color::c3(0.5, 0.5, 0.5)
+        } else {
+            0.5 * color(&Ray::new(rec.p, target - rec.p), world, rng)
+        }
     } else {
         let unit = r.direction().unit();
         let t = 0.5 * (unit.y() + 1.);
@@ -64,7 +82,7 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut file = match File::create("scene.ppm") {
+    let mut file = match File::create("chapter7.ppm") {
         Ok(f) => f,
         Err(e) => panic!(format!("got {:?} we r ded", e)),
     };
@@ -95,10 +113,10 @@ fn main() {
                 let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
                 let r = cam.ray(u, v);
                 // let p = r.pt_at_param(2.0);
-                col = col + color(&r, &world);
+                col = col + color(&r, &world, &mut rng);
             }
 
-            let c = (col / ns as f64) * sf;
+            let c = (col / ns as f64).gamma_correct(1.0) * sf;
             match file.write_all(format!("{}\n", c).as_bytes()) {
                 Err(_) => err += 1,
                 Ok(_) => count += 1,

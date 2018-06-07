@@ -32,6 +32,11 @@ impl Color {
     pub fn a(&self) -> f64 {
         self.elements[3]
     }
+
+    pub fn gamma_correct(&self, factor: f64) -> Self {
+        let pow = 1.0 / factor;
+        Color::c3(self.r().powf(pow), self.g().powf(pow), self.b().powf(pow))
+    }
 }
 
 /// impl traits
