@@ -1,5 +1,6 @@
 extern crate rand;
 use rand::prelude::*;
+use rand::FromEntropy;
 
 use std::fs::File;
 use std::io::Write;
@@ -21,7 +22,7 @@ use sphere::Sphere;
 mod camera;
 use camera::Camera;
 
-impl<T: Glimmer> Glimmer for Vec<T> {
+impl<G: Glimmer> Glimmer for Vec<G> {
     fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut record: Option<HitRecord> = None;
         let mut current_closest = t_max;
@@ -39,7 +40,7 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
     format!("P3\n{} {}\n{}\n", w, h, max)
 }
 
-fn random_unit_point(r: &mut ThreadRng) -> Point {
+fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     let mut p: Point;
     loop {
         p = 2.0 * Point::p3(r.gen(), r.gen(), r.gen()) - Point::p3(1.0, 1.0, 1.0);
@@ -50,7 +51,7 @@ fn random_unit_point(r: &mut ThreadRng) -> Point {
     p
 }
 
-fn color<T: Glimmer>(r: &Ray, world: &Vec<T>, rng: &mut ThreadRng) -> Color {
+fn color<G: Glimmer, R: Rng>(r: &Ray, world: &Vec<G>, rng: &mut R) -> Color {
     if let Some(rec) = world.glimmer(r, 0.001, std::f64::MAX) {
         let target = rec.p + rec.n + random_unit_point(rng);
         // twiddle the factor on the RHS of the less-than for more or less
@@ -102,7 +103,7 @@ fn main() {
     };
 
     let mut err: usize = 0;
-    let mut rng = thread_rng();
+    let mut rng = SmallRng::from_entropy();
 
     // Now the real rendering work:
     for j in (0..ny).rev() {

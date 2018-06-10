@@ -43,11 +43,15 @@ impl Point {
     }
 
     pub fn dot(&self, rhs: &Point) -> f64 {
-        self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
+        (self.x() * rhs.x()) + (self.y() * rhs.y()) + (self.z() * rhs.z())
     }
 
     pub fn self_dot(&self) -> f64 {
-        self.len().powi(2)
+        self.x().powi(2) + self.y().powi(2) + self.z().powi(2)
+    }
+
+    pub fn len_sq(&self) -> f64 {
+        self.self_dot()
     }
 
     pub fn cross(&self, rhs: &Point) -> Point {
