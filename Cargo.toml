@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Joe Ardent <code@ardent.nebcorp.com>"]
 
 [dependencies]
-rand = "0.5"
+rand = "0.5.1"
 
 [profile.dev]
 opt-level = 3

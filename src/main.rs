@@ -1,4 +1,5 @@
 extern crate rand;
+use rand::distributions::StandardNormal;
 use rand::prelude::*;
 use rand::FromEntropy;
 
@@ -41,19 +42,33 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
 }
 
 fn random_unit_point<R: Rng>(r: &mut R) -> Point {
+    // power distribution for 3
+    let scale: f64 = 1.0 / (r.gen::<f64>().powf(-1.0 / 3.0));
+    let p = Point::p3(
+        r.sample(StandardNormal),
+        r.sample(StandardNormal),
+        r.sample(StandardNormal),
+    ).unit() * scale;
+
+    p
+}
+
+fn rup_resamp<R: Rng>(r: &mut R) -> Point {
     let mut p: Point;
     loop {
-        p = 2.0 * Point::p3(r.gen(), r.gen(), r.gen()) - Point::p3(1.0, 1.0, 1.0);
-        if p.len().powi(2) < 1.0 {
+        p = (2.0 * Point::p3(r.gen(), r.gen(), r.gen())) - Point::p3(1.0, 1.0, 1.0);
+        if p.len_sq() < 1.0 {
             break;
         }
     }
+
     p
 }
 
 fn color<G: Glimmer, R: Rng>(r: &Ray, world: &Vec<G>, rng: &mut R) -> Color {
     if let Some(rec) = world.glimmer(r, 0.001, std::f64::MAX) {
         let target = rec.p + rec.n + random_unit_point(rng);
+        //let target = rec.p + rec.n + rup_resamp(rng);
         // twiddle the factor on the RHS of the less-than for more or less
         // recursion (higher factor is less recursion, more original color)
         if rng.gen::<f64>() < 0.3 {
@@ -83,7 +98,7 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut file = match File::create("chapter7.ppm") {
+    let mut file = match File::create("power_distribution.ppm") {
         Ok(f) => f,
         Err(e) => panic!(format!("got {:?} we r ded", e)),
     };
@@ -117,11 +132,11 @@ fn main() {
                 col = col + color(&r, &world, &mut rng);
             }
 
-            let c = (col / ns as f64).gamma_correct(1.0) * sf;
-            match file.write_all(format!("{}\n", c).as_bytes()) {
-                Err(_) => err += 1,
-                Ok(_) => count += 1,
-            };
+            // let c = (col / ns as f64).gamma_correct(1.0) * sf;
+            // match file.write_all(format!("{}\n", c).as_bytes()) {
+            //     Err(_) => err += 1,
+            //     Ok(_) => count += 1,
+            // };
         }
     }
 
