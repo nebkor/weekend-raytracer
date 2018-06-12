@@ -45,7 +45,8 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
 }
 
 fn random_unit_point<R: Rng>(r: &mut R) -> Point {
-    let scale = fast_cbrt(r.gen::<f32>()) as f64;
+    //let scale = fast_cbrt(r.gen::<f32>()) as f64;
+    let scale = r.gen::<f64>().cbrt();
     Point::p3(
         r.sample(StandardNormal),
         r.sample(StandardNormal),
@@ -98,7 +99,7 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut file = match File::create("fast_cbrt_bench.ppm") {
+    let mut file = match File::create("slow_cbrt_bench.ppm") {
         Ok(f) => f,
         Err(e) => panic!(format!("got {:?} we r ded", e)),
     };
@@ -136,7 +137,7 @@ fn main() {
             // match file.write_all(format!("{}\n", c).as_bytes()) {
             //     Err(_) => err += 1,
             //     Ok(_) => count += 1,
-            //};
+            // };
         }
     }
 
