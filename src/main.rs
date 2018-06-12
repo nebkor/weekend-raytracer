@@ -23,6 +23,9 @@ use sphere::Sphere;
 mod camera;
 use camera::Camera;
 
+mod utils;
+use utils::*;
+
 impl<G: Glimmer> Glimmer for Vec<G> {
     fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut record: Option<HitRecord> = None;
@@ -42,15 +45,12 @@ fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
 }
 
 fn random_unit_point<R: Rng>(r: &mut R) -> Point {
-    // power distribution for 3
-    let scale: f64 = 1.0 / (r.gen::<f64>().powf(-1.0 / 3.0));
-    let p = Point::p3(
+    let scale = fast_cbrt(r.gen::<f32>()) as f64;
+    Point::p3(
         r.sample(StandardNormal),
         r.sample(StandardNormal),
         r.sample(StandardNormal),
-    ).unit() * scale;
-
-    p
+    ).unit() * scale
 }
 
 fn rup_resamp<R: Rng>(r: &mut R) -> Point {
@@ -98,7 +98,7 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut file = match File::create("power_distribution.ppm") {
+    let mut file = match File::create("fast_cbrt_bench.ppm") {
         Ok(f) => f,
         Err(e) => panic!(format!("got {:?} we r ded", e)),
     };
@@ -136,12 +136,12 @@ fn main() {
             // match file.write_all(format!("{}\n", c).as_bytes()) {
             //     Err(_) => err += 1,
             //     Ok(_) => count += 1,
-            // };
+            //};
         }
     }
 
-    println!(
-        "Wrote {} lines, and didn't write {} lines, to {:?}.",
-        count, err, file
-    );
+    // println!(
+    //     "Wrote {} lines, and didn't write {} lines, to {:?}.",
+    //     count, err, file
+    // );
 }
