@@ -68,8 +68,8 @@ fn rup_resamp<R: Rng>(r: &mut R) -> Point {
 
 fn color<G: Glimmer, R: Rng>(r: &Ray, world: &Vec<G>, rng: &mut R) -> Color {
     if let Some(rec) = world.glimmer(r, 0.001, std::f64::MAX) {
-        let target = rec.p + rec.n + random_unit_point(rng);
-        //let target = rec.p + rec.n + rup_resamp(rng);
+        //let target = rec.p + rec.n + random_unit_point(rng);
+        let target = rec.p + rec.n + rup_resamp(rng);
         // twiddle the factor on the RHS of the less-than for more or less
         // recursion (higher factor is less recursion, more original color)
         if rng.gen::<f64>() < 0.3 {
@@ -99,7 +99,7 @@ fn main() {
         Sphere::new(Point::p3(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut file = match File::create("slow_cbrt_bench.ppm") {
+    let mut file = match File::create("resamp_bench.ppm") {
         Ok(f) => f,
         Err(e) => panic!(format!("got {:?} we r ded", e)),
     };
