@@ -1,5 +1,5 @@
 use point::Point;
-use ray::{Glimmer, HitRecord, Ray};
+use ray::*;
 
 pub struct Sphere {
     center_: Point,
