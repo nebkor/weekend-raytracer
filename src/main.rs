@@ -49,7 +49,7 @@ fn main() {
                 let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
                 let r = cam.ray(u, v);
                 // let p = r.pt_at_param(2.0);
-                col = col + color(&r, &world, &mut rng);
+                col = col + color(r, &world, &mut rng);
             }
 
             let c = (col / ns as f64).gamma_correct(1.0) * sf;

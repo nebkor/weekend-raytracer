@@ -18,13 +18,16 @@ mod ray;
 pub use ray::*;
 
 impl<G: Glimmer> Glimmer for Vec<G> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn glimmer(&self, r: &Ray) -> Option<HitRecord> {
         let mut record: Option<HitRecord> = None;
-        let mut current_closest = t_max;
-        for thing in self.iter() {
-            if let Some(hr) = thing.glimmer(r, t_min, current_closest) {
-                current_closest = hr.t;
-                std::mem::swap(&mut Some(hr), &mut record);
+        for thing in self {
+            if let Some(hr) = thing.glimmer(r) {
+                match record {
+                    None => record = Some(hr),
+                    Some(prev) => if hr.t < prev.t {
+                        record = Some(hr)
+                    },
+                }
             }
         }
         record
@@ -43,21 +46,13 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
             break;
         }
     }
-
     p
 }
 
-pub fn color<G: Glimmer, R: Rng>(r: &Ray, world: &Vec<G>, rng: &mut R) -> Color {
-    if let Some(rec) = world.glimmer(r, 0.001, std::f64::MAX) {
+pub fn color<G: Glimmer, R: Rng>(r: Ray, world: &Vec<G>, rng: &mut R) -> Color {
+    if let Some(rec) = world.glimmer(&r) {
         let target = rec.p + rec.n + random_unit_point(rng);
-
-        // twiddle the factor on the RHS of the less-than for more or less
-        // recursion (higher factor is less recursion, more original color)
-        if rng.gen::<f64>() < 0.3 {
-            Color::c3(0.5, 0.5, 0.5)
-        } else {
-            0.5 * color(&Ray::new(rec.p, target - rec.p), world, rng)
-        }
+        0.5 * color(Ray::new(rec.p, target - rec.p), world, rng)
     } else {
         let unit = r.direction().unit();
         let t = 0.5 * (unit.y() + 1.);

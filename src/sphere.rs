@@ -24,7 +24,7 @@ impl Sphere {
 }
 
 impl Glimmer for Sphere {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn glimmer(&self, r: &Ray) -> Option<HitRecord> {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms
@@ -34,19 +34,12 @@ impl Glimmer for Sphere {
         let disc = b.powi(2) - (a * c); // b^2 - ac
         if disc > 0.0 {
             let temp = (-b - disc.sqrt()) / a;
-            if temp < t_max && temp > t_min {
+            if temp > 0.0 {
                 let p = r.pt_at_param(temp);
                 let n = (p - *self.center()) / self.radius_;
                 Some(HitRecord::new(temp, p, n))
             } else {
-                let temp = (-b + disc.sqrt()) / a;
-                if temp < t_max && temp >= t_min {
-                    let p = r.pt_at_param(temp);
-                    let n = (p - *self.center()) / self.radius_;
-                    Some(HitRecord::new(temp, p, n))
-                } else {
-                    None
-                }
+                None
             }
         } else {
             None
