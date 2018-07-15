@@ -34,8 +34,13 @@ impl<G: Glimmer> Glimmer for Vec<G> {
     }
 }
 
-pub fn make_ppm_header(w: usize, h: usize, max: usize) -> String {
-    format!("P3\n{} {}\n{}\n", w, h, max)
+pub fn c2u8(color: &Color) -> Vec<u8> {
+    let mut v: Vec<u8> = Vec::new();
+    v.reserve_exact(4);
+    for i in color.iter() {
+        v.push(i.floor() as u8);
+    }
+    v
 }
 
 pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {

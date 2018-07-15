@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Deref, Div, Mul, Sub};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Color {
@@ -40,6 +40,14 @@ impl Color {
 }
 
 /// impl traits
+impl Deref for Color {
+    type Target = [f64];
+
+    fn deref(&self) -> &[f64] {
+        &self.elements
+    }
+}
+
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -88,7 +96,7 @@ impl Mul<f64> for Color {
             self.r() * scale,
             self.g() * scale,
             self.b() * scale,
-            self.a(),
+            self.a() * scale,
         )
     }
 }
