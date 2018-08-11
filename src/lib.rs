@@ -1,3 +1,5 @@
+use std::f64::MAX as FMAX;
+
 extern crate rand;
 pub use rand::prelude::*;
 pub use rand::FromEntropy;
@@ -18,10 +20,10 @@ mod ray;
 pub use ray::*;
 
 impl<G: Glimmer> Glimmer for Vec<G> {
-    fn glimmer(&self, r: &Ray) -> Option<HitRecord> {
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut record: Option<HitRecord> = None;
         for thing in self {
-            if let Some(hr) = thing.glimmer(r) {
+            if let Some(hr) = thing.glimmer(r, t_min, t_max) {
                 match record {
                     None => record = Some(hr),
                     Some(prev) => if hr.t < prev.t {
@@ -46,7 +48,7 @@ pub fn c2u8(color: &Color) -> Vec<u8> {
 pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     let mut p: Point;
     loop {
-        p = (2.0 * Point::p3(r.gen(), r.gen(), r.gen())) - Point::p3(1.0, 1.0, 1.0);
+        p = (2.0 * Point::p3(r.gen(), r.gen(), r.gen())) - 1.0;
         if p.len_sq() < 1.0 {
             break;
         }
@@ -55,7 +57,7 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
 }
 
 pub fn color<G: Glimmer, R: Rng>(r: Ray, world: &Vec<G>, rng: &mut R) -> Color {
-    if let Some(rec) = world.glimmer(&r) {
+    if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
         let target = rec.p + rec.n + random_unit_point(rng);
         0.5 * color(Ray::new(rec.p, target - rec.p), world, rng)
     } else {

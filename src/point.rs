@@ -87,6 +87,19 @@ impl Add for Point {
     }
 }
 
+impl Add<f64> for Point {
+    type Output = Self;
+
+    fn add(self, scalar: f64) -> Self {
+        Point::new(
+            self.x() + scalar,
+            self.y() + scalar,
+            self.z() + scalar,
+            self.w() + scalar,
+        )
+    }
+}
+
 impl Sub for Point {
     type Output = Self;
 
@@ -97,6 +110,14 @@ impl Sub for Point {
             self.z() - rhs.z(),
             1.0,
         )
+    }
+}
+
+impl Sub<f64> for Point {
+    type Output = Self;
+
+    fn sub(self, scalar: f64) -> Self {
+        Point::new(self.x() - scalar, self.y() - scalar, self.z() - scalar, 1.0)
     }
 }
 

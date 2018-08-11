@@ -20,7 +20,7 @@ impl HitRecord {
 }
 
 pub trait Glimmer {
-    fn glimmer(&self, r: &Ray) -> Option<HitRecord>;
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 impl Ray {
