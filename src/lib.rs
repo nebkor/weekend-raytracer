@@ -4,6 +4,8 @@ extern crate rand;
 pub use rand::prelude::*;
 pub use rand::FromEntropy;
 
+extern crate euclid;
+
 mod color;
 pub use color::Color;
 
@@ -47,9 +49,10 @@ pub fn c2u8(color: &Color) -> Vec<u8> {
 
 pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     let mut p: Point;
+    let one = Point::new(1.0, 1.0, 1.0);
     loop {
-        p = (2.0 * Point::p3(r.gen(), r.gen(), r.gen())) - 1.0;
-        if p.len_sq() < 1.0 {
+        p = (Point::new(r.gen(), r.gen(), r.gen()) * 2.0) - one;
+        if p.square_length() < 1.0 {
             break;
         }
     }
@@ -61,8 +64,8 @@ pub fn color<G: Glimmer, R: Rng>(r: Ray, world: &Vec<G>, rng: &mut R) -> Color {
         let target = rec.p + rec.n + random_unit_point(rng);
         0.5 * color(Ray::new(rec.p, target - rec.p), world, rng)
     } else {
-        let unit = r.direction().unit();
-        let t = 0.5 * (unit.y() + 1.);
+        let unit = r.direction().normalize();
+        let t = 0.5 * (unit.y + 1.);
         // interpolate between blue at the top and white at the bottom
         (1. - t) * Color::c3(1., 1., 1.) + t * Color::c3(0.5, 0.7, 1.0)
     }

@@ -28,9 +28,9 @@ impl Glimmer for Sphere {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms
-        let a = rd.self_dot();
-        let b = oc.dot(&rd);
-        let c = oc.self_dot() - self.radius_.powi(2);
+        let a = rd.square_length();
+        let b = oc.dot(rd);
+        let c = oc.square_length() - self.radius_.powi(2);
         let disc = b.powi(2) - (a * c); // b^2 - ac
         if disc > 0.0 {
             let temp = (-b - disc.sqrt()) / a;

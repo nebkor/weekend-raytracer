@@ -11,15 +11,15 @@ pub struct Camera {
 impl Camera {
     pub fn default() -> Self {
         Camera {
-            lower_left_: Point::p3(-2.0, -1.0, -1.0),
-            horizontal_: Point::p3(4.0, 0.0, 0.0),
-            vertical_: Point::p3(0.0, 2.0, 0.0),
-            origin_: Point::p3(0.0, 0.0, 0.0),
+            lower_left_: Point::new(-2.0, -1.0, -1.0),
+            horizontal_: Point::new(4.0, 0.0, 0.0),
+            vertical_: Point::new(0.0, 2.0, 0.0),
+            origin_: Point::new(0.0, 0.0, 0.0),
         }
     }
 
     pub fn ray(&self, u: f64, v: f64) -> Ray {
-        let uv = self.lower_left_ + (u * self.horizontal_) + (v * self.vertical_) - self.origin_;
+        let uv = self.lower_left_ + (self.horizontal_ * u) + (self.vertical_ * v) - self.origin_;
         Ray::new(self.origin_, uv)
     }
 
