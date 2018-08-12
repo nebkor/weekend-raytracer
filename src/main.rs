@@ -21,7 +21,7 @@ fn main() {
         Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let path = Path::new(r"chapter7-euclid.png");
+    let path = Path::new(r"chapter7.png");
 
     let file = match File::create(path.clone()) {
         Ok(f) => f,
