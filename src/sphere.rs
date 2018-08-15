@@ -1,5 +1,5 @@
-use point::Point;
 use ray::*;
+use Point;
 
 pub struct Sphere {
     center_: Point,

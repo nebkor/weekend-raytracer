@@ -1,4 +1,4 @@
-use point::Point;
+use Point;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray {

@@ -8,15 +8,13 @@ extern crate euclid;
 use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
+pub type Point = Vector3D<f64>;
 
 mod sphere;
 pub use sphere::Sphere;
 
 mod camera;
 pub use camera::Camera;
-
-mod point;
-pub use point::Point;
 
 mod ray;
 pub use ray::*;
