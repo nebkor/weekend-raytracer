@@ -1,5 +1,5 @@
-use ray::Ray;
-use Point;
+use crate::ray::Ray;
+use crate::Point;
 
 pub struct Camera {
     lower_left_: Point,

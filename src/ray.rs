@@ -1,4 +1,4 @@
-use Point;
+use crate::Point;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray {

@@ -1,5 +1,5 @@
-use ray::*;
-use Point;
+use crate::ray::*;
+use crate::Point;
 
 pub struct Sphere {
     center_: Point,

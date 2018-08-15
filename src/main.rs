@@ -1,3 +1,5 @@
+#![feature(rust_2018_preview)]
+
 extern crate raytracer;
 use raytracer::*;
 
@@ -51,9 +53,9 @@ fn main() {
 
     let cam = Camera::default();
 
-    let world = vec![
-        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5),
-        Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
+    let world: World = vec![
+        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
     ];
 
     let mut data: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
