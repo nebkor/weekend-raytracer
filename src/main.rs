@@ -30,7 +30,7 @@ fn main() {
 
     let ref mut w = BufWriter::new(file);
     let mut encoder = png::Encoder::new(w, nx, ny); // Width is nx pixels and height is ny
-    encoder.set(png::ColorType::RGBA).set(png::BitDepth::Eight);
+    encoder.set(png::ColorType::RGB).set(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
 
     let mut data: Vec<u8> = Vec::with_capacity(nx as usize * ny as usize * 4);
@@ -40,7 +40,7 @@ fn main() {
     // Now the real rendering work:
     for j in (0..ny).rev() {
         for i in 0..nx {
-            let mut col = Color::c3(0.0, 0.0, 0.0);
+            let mut col = Color::new(0.0, 0.0, 0.0);
             for _s in 0..ns {
                 let u = (i as f64 + rng.gen::<f64>()) / nx as f64;
                 let v = (j as f64 + rng.gen::<f64>()) / ny as f64;
@@ -49,9 +49,9 @@ fn main() {
                 col = col + color(r, &world, &mut rng);
             }
 
-            let c = (col / ns as f64).gamma_correct(1.0) * sf;
-            let v = c2u8(&c);
-            data.extend_from_slice(&v);
+            let c = (col / ns as f32).gamma_correct(2.0) * sf;
+            let v: Coloru8 = c.cast();
+            data.extend_from_slice(v.to_array().as_ref());
         }
     }
 
