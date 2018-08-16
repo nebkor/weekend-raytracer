@@ -53,12 +53,11 @@ fn main() {
 
     let cam = Camera::default();
 
-    let world: World = vec![
-        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
-    ];
+    let small_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+    let big_sphere = Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0);
+    let world: World = vec![&small_sphere, &big_sphere];
 
-    let mut data: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
+    let mut imgbuf: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
 
     let mut rng = SmallRng::from_entropy();
 
@@ -76,9 +75,9 @@ fn main() {
 
             let c = (col / NS as f32).gamma_correct(2.0) * SF;
             let v: Coloru8 = c.cast();
-            data.extend_from_slice(v.to_array().as_ref());
+            imgbuf.extend_from_slice(&(v.to_array()));
         }
     }
 
-    write_png(outfile, data.as_ref());
+    write_png(outfile, &*imgbuf);
 }
