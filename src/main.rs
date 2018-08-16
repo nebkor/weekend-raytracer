@@ -17,9 +17,63 @@ const NX: u32 = 800;
 const NY: u32 = 400;
 const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
+const GAMMA: f32 = 2.0;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
+//--------------------------------------------------------------------
+fn main() {
+    let cam = Camera::default();
+
+    let small_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+    let big_sphere = Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0);
+    let world: World = vec![&small_sphere, &big_sphere];
+
+    let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
+
+    render(&cam, &world, &mut imgbuf);
+
+    let outfile = get_outfile();
+
+    write_png(&*outfile, &*imgbuf);
+}
+
+//--------------------------------------------------------------------
+fn render(cam: &Camera, world: &World, imgbuf: &mut ImageBuf) {
+    let mut rng = SmallRng::from_entropy();
+    for j in (0..NY).rev() {
+        for i in 0..NX {
+            let mut col = Color::new(0.0, 0.0, 0.0);
+            for _s in 0..NS {
+                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
+                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
+                let r = cam.ray(u, v);
+                // let p = r.pt_at_param(2.0);
+                col = col + color(r, &world, &mut rng);
+            }
+
+            let c = (col / NS as f32).gamma_correct(GAMMA) * SF;
+            let v: Coloru8 = c.cast();
+            imgbuf.extend_from_slice(&(v.to_array()));
+        }
+    }
+}
+
+//--------------------------------------------------------------------
+fn get_outfile() -> String {
+    let args = App::new("Weekend Raytracer")
+        .version(VERSION)
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("Sets the basename of the PNG output file.")
+                .required(true)
+                .index(1),
+        ).get_matches();
+
+    args.value_of("OUTPUT").unwrap().into()
+}
+
+//--------------------------------------------------------------------
 fn write_png(out: &str, framebuffer: &[u8]) {
     let pngfile = format!("{}.png", out);
     let path = Path::new(&pngfile);
@@ -37,47 +91,4 @@ fn write_png(out: &str, framebuffer: &[u8]) {
     writer.write_image_data(framebuffer).unwrap();
 
     println!("Wrote to {:?}.", path);
-}
-
-fn main() {
-    let args = App::new("Weekend Raytracer")
-        .version(VERSION)
-        .arg(
-            Arg::with_name("OUTPUT")
-                .help("Sets the basename of the PNG output file.")
-                .required(true)
-                .index(1),
-        ).get_matches();
-
-    let outfile = args.value_of("OUTPUT").unwrap();
-
-    let cam = Camera::default();
-
-    let small_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-    let big_sphere = Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0);
-    let world: World = vec![&small_sphere, &big_sphere];
-
-    let mut imgbuf: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
-
-    let mut rng = SmallRng::from_entropy();
-
-    // Now the real rendering work:
-    for j in (0..NY).rev() {
-        for i in 0..NX {
-            let mut col = Color::new(0.0, 0.0, 0.0);
-            for _s in 0..NS {
-                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
-                let r = cam.ray(u, v);
-                // let p = r.pt_at_param(2.0);
-                col = col + color(r, &world, &mut rng);
-            }
-
-            let c = (col / NS as f32).gamma_correct(2.0) * SF;
-            let v: Coloru8 = c.cast();
-            imgbuf.extend_from_slice(&(v.to_array()));
-        }
-    }
-
-    write_png(outfile, &*imgbuf);
 }

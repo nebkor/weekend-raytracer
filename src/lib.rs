@@ -22,6 +22,7 @@ mod ray;
 pub use crate::ray::*;
 
 pub type World<'w> = Vec<&'w dyn Glimmer>;
+pub type ImageBuf = Vec<u8>;
 
 pub trait Gamma {
     fn gamma_correct(&self, factor: f32) -> Self;
