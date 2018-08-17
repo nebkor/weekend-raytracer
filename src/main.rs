@@ -25,9 +25,10 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 fn main() {
     let cam = Camera::default();
 
-    let small_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-    let big_sphere = Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0);
-    let world: World = vec![&small_sphere, &big_sphere];
+    let world: World = &[
+        &Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5),
+        &Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
+    ];
 
     let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
 

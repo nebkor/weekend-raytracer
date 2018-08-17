@@ -21,7 +21,7 @@ pub use crate::camera::Camera;
 mod ray;
 pub use crate::ray::*;
 
-pub type World<'w> = Vec<&'w dyn Glimmer>;
+pub type World<'w> = &'w [&'w dyn Glimmer];
 pub type ImageBuf = Vec<u8>;
 
 pub trait Gamma {
@@ -38,7 +38,7 @@ impl Gamma for Color {
 impl Glimmer for World<'w> {
     fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut record: Option<HitRecord> = None;
-        for thing in self {
+        for thing in self.iter() {
             if let Some(hr) = thing.glimmer(r, t_min, t_max) {
                 match record {
                     None => record = Some(hr),
@@ -64,7 +64,7 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn color<R: Rng>(r: Ray, world: &Vec<&dyn Glimmer>, rng: &mut R) -> Color {
+pub fn color<R: Rng>(r: Ray, world: World, rng: &mut R) -> Color {
     if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
         let target = rec.p + rec.n + random_unit_point(rng);
         color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
