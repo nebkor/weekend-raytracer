@@ -1,12 +1,7 @@
-#![feature(rust_2018_preview)]
-
-extern crate raytracer;
 use raytracer::*;
 
-extern crate png;
 use png::HasParameters;
 
-extern crate clap;
 use clap::{App, Arg};
 
 use std::fs::File;
@@ -25,7 +20,7 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 fn main() {
     let cam = Camera::default();
 
-    let world: World = &[
+    let world: World<'_> = &[
         &Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5),
         &Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
     ];
@@ -40,7 +35,7 @@ fn main() {
 }
 
 //--------------------------------------------------------------------
-fn render(cam: &Camera, world: &World, imgbuf: &mut ImageBuf) {
+fn render(cam: &Camera, world: &World<'_>, imgbuf: &mut ImageBuf) {
     let mut rng = SmallRng::from_entropy();
     for j in (0..NY).rev() {
         for i in 0..NX {
