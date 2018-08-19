@@ -1,5 +1,5 @@
 use crate::ray::*;
-use crate::{Color, Material, Point};
+use crate::{Color, Material, Point, Rng};
 
 pub struct Sphere<M: Material> {
     pub center: Point,
@@ -30,7 +30,7 @@ impl<M: Material> Sphere<M> {
 }
 
 impl<M: Material> Material for Sphere<M> {
-    fn scatter(&self, record: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&mut self, record: &HitRecord) -> Option<(Color, Ray)> {
         self.material.scatter(record)
     }
 }
