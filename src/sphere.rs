@@ -1,5 +1,5 @@
 use crate::ray::*;
-use crate::Point;
+use crate::{Material, Point, Vec3D};
 
 pub struct Sphere {
     center_: Point,
@@ -20,6 +20,17 @@ impl Sphere {
 
     pub fn radius(&self) -> f64 {
         self.radius_
+    }
+}
+
+impl Material for Sphere {
+    fn scatter(
+        &self,
+        record: &HitRecord,
+        attenuation: &Vec3D,
+        scattered: &Ray,
+    ) -> Option<(Point, Ray)> {
+        None
     }
 }
 

@@ -7,6 +7,7 @@ use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
 pub type Point = Vector3D<f64>;
+pub type Vec3D = Vector3D<f64>;
 
 mod sphere;
 pub use crate::sphere::Sphere;
@@ -16,6 +17,9 @@ pub use crate::camera::Camera;
 
 mod ray;
 pub use crate::ray::*;
+
+mod material;
+pub use crate::material::Material;
 
 pub type World<'w> = &'w [&'w dyn Glimmer];
 pub type ImageBuf = Vec<u8>;
