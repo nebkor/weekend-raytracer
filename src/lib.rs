@@ -19,7 +19,7 @@ mod ray;
 pub use crate::ray::*;
 
 mod material;
-pub use crate::material::Material;
+pub use crate::material::*;
 
 pub type World<'w> = &'w [&'w dyn Glimmer];
 pub type ImageBuf = Vec<u8>;
