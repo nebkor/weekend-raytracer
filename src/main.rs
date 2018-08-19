@@ -25,34 +25,9 @@ fn main() {
         &Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
     ];
 
-    let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
-
-    render(&cam, &world, &mut imgbuf);
-
     let outfile = get_outfile();
 
-    write_png(&*outfile, &*imgbuf);
-}
-
-//--------------------------------------------------------------------
-fn render(cam: &Camera, world: &World<'_>, imgbuf: &mut ImageBuf) {
-    let mut rng = SmallRng::from_entropy();
-    for j in (0..NY).rev() {
-        for i in 0..NX {
-            let mut col = Color::new(0.0, 0.0, 0.0);
-            for _s in 0..NS {
-                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
-                let r = cam.ray(u, v);
-                // let p = r.pt_at_param(2.0);
-                col = col + color(r, &world, &mut rng);
-            }
-
-            let c = (col / NS as f32).gamma_correct(GAMMA) * SF;
-            let v: Coloru8 = c.cast();
-            imgbuf.extend_from_slice(&(v.to_array()));
-        }
-    }
+    render_to_file(&cam, &world, &outfile);
 }
 
 //--------------------------------------------------------------------
@@ -70,8 +45,11 @@ fn get_outfile() -> String {
 }
 
 //--------------------------------------------------------------------
-fn write_png(out: &str, framebuffer: &[u8]) {
-    let pngfile = format!("{}.png", out);
+fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
+    let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
+    let mut rng = SmallRng::from_entropy();
+
+    let pngfile = format!("{}.png", filename);
     let path = Path::new(&pngfile);
 
     let file = match File::create(path.clone()) {
@@ -84,7 +62,24 @@ fn write_png(out: &str, framebuffer: &[u8]) {
     encoder.set(png::ColorType::RGB).set(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
 
-    writer.write_image_data(framebuffer).unwrap();
+    for j in (0..NY).rev() {
+        for i in 0..NX {
+            let mut col = Color::new(0.0, 0.0, 0.0);
+            for _s in 0..NS {
+                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
+                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
+                let r = cam.ray(u, v);
+                // let p = r.pt_at_param(2.0);
+                col = col + color(r, &world, &mut rng);
+            }
+
+            let c = (col / NS as f32).gamma_correct(GAMMA) * SF;
+            let v: Coloru8 = c.cast();
+            imgbuf.extend_from_slice(&(v.to_array()));
+        }
+    }
+
+    writer.write_image_data(&imgbuf).unwrap();
 
     println!("Wrote to {:?}.", path);
 }
