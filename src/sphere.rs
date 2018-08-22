@@ -1,5 +1,5 @@
 use crate::ray::*;
-use crate::{Color, Material, Point, Rng};
+use crate::{Color, Material, Point};
 
 pub struct Sphere<M: Material> {
     pub center: Point,
@@ -29,14 +29,14 @@ impl<M: Material> Sphere<M> {
     }
 }
 
-impl<M: Material> Material for Sphere<M> {
-    fn scatter(&mut self, record: &HitRecord) -> Option<(Color, Ray)> {
-        self.material.scatter(record)
+impl<M: Material + Glimmer> Material for Sphere<M> {
+    fn scatter(&mut self, ray_in: &Ray, record: &HitRecord) -> Option<(Color, Ray)> {
+        self.material.scatter(ray_in, record)
     }
 }
 
-impl<M: Material> Glimmer for Sphere<M> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+impl<M: Material + Glimmer> Glimmer for Sphere<M> {
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, Scatter)> {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms
@@ -49,12 +49,15 @@ impl<M: Material> Glimmer for Sphere<M> {
             if temp > t_min && temp < t_max {
                 let p = r.pt_at_param(temp);
                 let n = (p - *self.center()) / self.radius;
-                Some(HitRecord::new(temp, p, n))
+                Some(
+                    HitRecord::new(temp, p, n),
+                    Some(Box::new(self.material.clone())),
+                )
             } else {
-                None
+                (None, None)
             }
         } else {
-            None
+            (None, None)
         }
     }
 }

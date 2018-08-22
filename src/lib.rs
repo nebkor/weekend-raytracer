@@ -36,14 +36,14 @@ impl Gamma for Color {
 }
 
 impl Glimmer for World<'_> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut record: Option<HitRecord> = None;
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, Scatter)> {
+        let mut record: Option<(HitRecord, Scatter)> = (None, None);
         for thing in self.iter() {
             if let Some(hr) = thing.glimmer(r, t_min, t_max) {
                 match record {
-                    None => record = Some(hr),
+                    None => record = Some(hr, Box::new(**thing.material().clone())),
                     Some(prev) => if hr.t < prev.t {
-                        record = Some(hr)
+                        record = Some(hr, Box::new(**thing.material().clone()))
                     },
                 }
             }
@@ -64,8 +64,13 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn color<R: Rng>(r: Ray, world: World<'_>, rng: &mut R) -> Color {
+pub fn reflect(v: &Vec3D, n: &Vec3D) -> Vec3D {
+    *v - (*n * 2.0 * v.dot(*n))
+}
+
+pub fn color<R: Rng>(r: Ray, world: World<'_>, rng: &mut R, depth: usize) -> Color {
     if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
+        if let Some(()) = &&depth < 50 {}
         let target = rec.p + rec.n + random_unit_point(rng);
         color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
     } else {
