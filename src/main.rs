@@ -39,7 +39,8 @@ fn get_outfile() -> String {
                 .help("Sets the basename of the PNG output file.")
                 .required(true)
                 .index(1),
-        ).get_matches();
+        )
+        .get_matches();
 
     args.value_of("OUTPUT").unwrap().into()
 }

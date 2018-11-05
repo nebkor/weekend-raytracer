@@ -32,19 +32,21 @@ impl Gamma for Color {
 }
 
 impl Glimmer for World<'_> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut record: Option<HitRecord> = None;
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Sparkle> {
+        let mut ret: Option<Sparkle> = None;
         for thing in self.iter() {
-            if let Some(hr) = thing.glimmer(r, t_min, t_max) {
-                match record {
-                    None => record = Some(hr),
-                    Some(prev) => if hr.t < prev.t {
-                        record = Some(hr)
-                    },
+            if let Some(sparkle) = thing.glimmer(r, t_min, t_max) {
+                match ret {
+                    None => ret = Some(sparkle),
+                    Some(prev) => {
+                        if sparkle.t < prev.t {
+                            ret = Some(sparkle)
+                        }
+                    }
                 }
             }
         }
-        record
+        ret
     }
 }
 

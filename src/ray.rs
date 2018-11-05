@@ -7,20 +7,20 @@ pub struct Ray {
 }
 
 #[derive(Clone, Copy)]
-pub struct HitRecord {
+pub struct Sparkle {
     pub t: f64,
     pub p: Point,
     pub n: Point,
 }
 
-impl HitRecord {
+impl Sparkle {
     pub fn new(t: f64, p: Point, n: Point) -> Self {
-        HitRecord { t, p, n }
+        Sparkle { t, p, n }
     }
 }
 
 pub trait Glimmer {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Sparkle>;
 }
 
 impl Ray {
