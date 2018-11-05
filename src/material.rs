@@ -1,4 +1,4 @@
-use crate::{Sparkle, Point, Ray};
+use crate::{Point, Ray, Sparkle};
 
 pub struct ScatterRecord {
     attenuation: Point,

@@ -14,7 +14,7 @@ const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 const GAMMA: f32 = 2.0;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 //--------------------------------------------------------------------
 fn main() {
@@ -53,12 +53,10 @@ fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
     let pngfile = format!("{}.png", filename);
     let path = Path::new(&pngfile);
 
-    let file = match File::create(path.clone()) {
-        Ok(f) => f,
-        Err(e) => panic!(format!("got {:?} we r ded", e)),
-    };
+    let file =
+        File::create(&path).unwrap_or_else(|_| panic!("Couldn't open {} for writing.", pngfile));
 
-    let ref mut w = BufWriter::new(file);
+    let w = &mut BufWriter::new(file);
     let mut encoder = png::Encoder::new(w, NX, NY); // Width is nx pixels and height is ny
     encoder.set(png::ColorType::RGB).set(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
@@ -67,15 +65,14 @@ fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
         for i in 0..NX {
             let mut col = Color::new(0.0, 0.0, 0.0);
             for _s in 0..NS {
-                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
+                let u = (f64::from(i) + rng.gen::<f64>()) / f64::from(NX);
+                let v = (f64::from(j) + rng.gen::<f64>()) / f64::from(NY);
                 let r = cam.ray(u, v);
-                // let p = r.pt_at_param(2.0);
-                col = col + color(r, &world, &mut rng);
+                col += color(r, &world, &mut rng);
             }
 
-            let c = (col / NS as f32).gamma_correct(GAMMA) * SF;
-            let v: Coloru8 = c.cast();
+            let col = (col / NS as f32).gamma_correct(GAMMA) * SF;
+            let v: Coloru8 = col.cast();
             imgbuf.extend_from_slice(&(v.to_array()));
         }
     }
