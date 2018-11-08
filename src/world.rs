@@ -1,4 +1,4 @@
-use ray::{Ray, Glimmer, Sparkle}
+use ray::{Ray, Visible, Bounce}
 
 struct World<T> {
     visibles: Vec<T>

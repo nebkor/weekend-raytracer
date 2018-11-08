@@ -23,8 +23,8 @@ impl Sphere {
     }
 }
 
-impl Glimmer for Sphere {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Sparkle> {
+impl Visible for Sphere {
+    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce> {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms
@@ -37,7 +37,7 @@ impl Glimmer for Sphere {
             if temp > t_min && temp < t_max {
                 let p = r.pt_at_param(temp);
                 let n = (p - *self.center()) / self.radius_;
-                Some(Sparkle::new(temp, p, n))
+                Some(Bounce::new(temp, p, n))
             } else {
                 None
             }

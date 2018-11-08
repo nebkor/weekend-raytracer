@@ -17,7 +17,7 @@ pub use crate::camera::Camera;
 mod ray;
 pub use crate::ray::*;
 
-pub type World<'w> = &'w [&'w dyn Glimmer];
+pub type World<'w> = &'w [&'w dyn Visible];
 pub type ImageBuf = Vec<u8>;
 
 pub trait Gamma {
@@ -31,16 +31,16 @@ impl Gamma for Color {
     }
 }
 
-impl Glimmer for World<'_> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Sparkle> {
-        let mut ret: Option<Sparkle> = None;
+impl Visible for World<'_> {
+    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce> {
+        let mut ret: Option<Bounce> = None;
         for thing in self.iter() {
-            if let Some(sparkle) = thing.glimmer(r, t_min, t_max) {
+            if let Some(bounce) = thing.bounce(r, t_min, t_max) {
                 match ret {
-                    None => ret = Some(sparkle),
+                    None => ret = Some(bounce),
                     Some(prev) => {
-                        if sparkle.t < prev.t {
-                            ret = Some(sparkle)
+                        if bounce.t < prev.t {
+                            ret = Some(bounce)
                         }
                     }
                 }
@@ -63,7 +63,7 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
 }
 
 pub fn color<R: Rng>(r: Ray, world: World<'_>, rng: &mut R) -> Color {
-    if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
+    if let Some(rec) = world.bounce(&r, 0.001, FMAX) {
         let target = rec.p + rec.n + random_unit_point(rng);
         color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
     } else {

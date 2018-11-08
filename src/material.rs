@@ -1,4 +1,4 @@
-use crate::{Point, Ray, Sparkle};
+use crate::{Point, Ray, Bounce};
 
 pub struct ScatterRecord {
     attenuation: Point,
@@ -6,7 +6,7 @@ pub struct ScatterRecord {
 }
 
 pub trait Material {
-    fn scatter(&self, ray_in: &Ray, sparkle: &Sparkle) -> Option<ScatterRecord>
+    fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord>
 }
 
 pub struct Metal {
