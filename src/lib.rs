@@ -11,6 +11,9 @@ pub type Point = Vector3D<f64>;
 mod sphere;
 pub use crate::sphere::Sphere;
 
+mod material;
+pub use crate::material::*;
+
 mod camera;
 pub use crate::camera::Camera;
 
@@ -62,14 +65,24 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn color<R: Rng>(r: Ray, world: World<'_>, rng: &mut R) -> Color {
-    if let Some(rec) = world.bounce(&r, 0.001, FMAX) {
-        let target = rec.p + rec.n + random_unit_point(rng);
-        color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
-    } else {
-        let unit = r.direction().normalize();
-        let t = 0.5 * (unit.y + 1.) as f32;
-        // interpolate between blue at the top and white at the bottom
-        (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
+pub fn color(r: &Ray, world: &mut World<'_>, depth: usize) -> Color {
+    match world.bounce(&r, 0.001, FMAX).as_mut() {
+        Some(bounce) => {
+            if depth < 50 {
+                if let Some(scatrec) = (bounce.mat).scatter(r, bounce) {
+                    return color(&(scatrec.scattered), world, depth + 1);
+                } else {
+                    return Color::new(0.0, 0.0, 0.0);
+                }
+            } else {
+                return Color::new(0.0, 0.0, 0.0);
+            }
+        }
+        None => {
+            let unit = r.direction().normalize();
+            let t = 0.5 * (unit.y + 1.) as f32;
+            // interpolate between blue at the top and white at the bottom
+            (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
+        }
     }
 }

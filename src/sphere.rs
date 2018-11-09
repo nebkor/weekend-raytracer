@@ -1,25 +1,28 @@
+use crate::material::*;
 use crate::ray::*;
 use crate::Point;
 
 pub struct Sphere {
-    center_: Point,
-    radius_: f64,
+    pub center: Point,
+    pub radius: f64,
+    pub mat: BoxMat,
 }
 
 impl Sphere {
-    pub fn new(c: Point, r: f64) -> Self {
+    pub fn new(center: Point, radius: f64, mat: BoxMat) -> Self {
         Sphere {
-            center_: c,
-            radius_: r,
+            center,
+            radius,
+            mat,
         }
     }
 
     pub fn center(&self) -> &Point {
-        &self.center_
+        &self.center
     }
 
     pub fn radius(&self) -> f64 {
-        self.radius_
+        self.radius
     }
 }
 
@@ -30,14 +33,14 @@ impl Visible for Sphere {
         // a, b, c correspond to quadratic equation terms
         let a = rd.square_length();
         let b = oc.dot(rd);
-        let c = oc.square_length() - self.radius_.powi(2);
+        let c = oc.square_length() - self.radius.powi(2);
         let disc = b.powi(2) - (a * c); // b^2 - ac
         if disc > 0.0 {
             let temp = (-b - disc.sqrt()) / a;
             if temp > t_min && temp < t_max {
                 let p = r.pt_at_param(temp);
-                let n = (p - *self.center()) / self.radius_;
-                Some(Bounce::new(temp, p, n))
+                let n = (p - *self.center()) / self.radius;
+                Some(Bounce::new(temp, p, n, &self.mat))
             } else {
                 None
             }

@@ -1,3 +1,4 @@
+use crate::material::*;
 use crate::Point;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -6,16 +7,17 @@ pub struct Ray {
     b: Point,
 }
 
-#[derive(Clone, Copy)]
-pub struct Bounce {
+#[derive(Clone)]
+pub struct Bounce<'m> {
     pub t: f64,
     pub p: Point,
     pub n: Point,
+    pub mat: &'m BoxMat,
 }
 
-impl Bounce {
-    pub fn new(t: f64, p: Point, n: Point) -> Self {
-        Bounce { t, p, n }
+impl<'m> Bounce<'m> {
+    pub fn new(t: f64, p: Point, n: Point, mat: &'m BoxMat) -> Self {
+        Bounce { t, p, n, mat }
     }
 }
 
