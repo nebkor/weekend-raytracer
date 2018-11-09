@@ -1,6 +1,5 @@
-use crate::{Material, Point};
-
-pub type Scatter = Option<Box<dyn Material>>;
+use crate::material::*;
+use crate::Point;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray {
@@ -8,21 +7,22 @@ pub struct Ray {
     b: Point,
 }
 
-#[derive(Clone, Copy)]
-pub struct HitRecord {
+#[derive(Clone)]
+pub struct Bounce<'m> {
     pub t: f64,
     pub p: Point,
     pub n: Point,
+    pub mat: &'m BoxMat,
 }
 
-impl HitRecord {
-    pub fn new(t: f64, p: Point, n: Point) -> Self {
-        HitRecord { t, p, n }
+impl<'m> Bounce<'m> {
+    pub fn new(t: f64, p: Point, n: Point, mat: &'m BoxMat) -> Self {
+        Bounce { t, p, n, mat }
     }
 }
 
-pub trait Glimmer {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, Scatter)>;
+pub trait Visible {
+    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce>;
 }
 
 impl Ray {

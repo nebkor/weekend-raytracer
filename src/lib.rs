@@ -7,10 +7,12 @@ use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
 pub type Point = Vector3D<f64>;
-pub type Vec3D = Vector3D<f64>;
 
 mod sphere;
 pub use crate::sphere::Sphere;
+
+mod material;
+pub use crate::material::*;
 
 mod camera;
 pub use crate::camera::Camera;
@@ -18,10 +20,7 @@ pub use crate::camera::Camera;
 mod ray;
 pub use crate::ray::*;
 
-mod material;
-pub use crate::material::*;
-
-pub type World<'w> = &'w [&'w dyn Glimmer];
+pub type World<'w> = &'w [&'w dyn Visible];
 pub type ImageBuf = Vec<u8>;
 
 pub trait Gamma {
@@ -35,20 +34,22 @@ impl Gamma for Color {
     }
 }
 
-impl Glimmer for World<'_> {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, Scatter)> {
-        let mut record: Option<(HitRecord, Scatter)> = (None, None);
+impl Visible for World<'_> {
+    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce> {
+        let mut ret: Option<Bounce> = None;
         for thing in self.iter() {
-            if let Some(hr) = thing.glimmer(r, t_min, t_max) {
-                match record {
-                    None => record = Some(hr, Box::new(**thing.material().clone())),
-                    Some(prev) => if hr.t < prev.t {
-                        record = Some(hr, Box::new(**thing.material().clone()))
-                    },
+            if let Some(bounce) = thing.bounce(r, t_min, t_max) {
+                match ret {
+                    None => ret = Some(bounce),
+                    Some(ref prev) => {
+                        if bounce.t < prev.t {
+                            ret = Some(bounce)
+                        }
+                    }
                 }
             }
         }
-        record
+        ret
     }
 }
 
@@ -64,19 +65,24 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn reflect(v: &Vec3D, n: &Vec3D) -> Vec3D {
-    *v - (*n * 2.0 * v.dot(*n))
-}
-
-pub fn color<R: Rng>(r: Ray, world: World<'_>, rng: &mut R, depth: usize) -> Color {
-    if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
-        if let Some(()) = &&depth < 50 {}
-        let target = rec.p + rec.n + random_unit_point(rng);
-        color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
-    } else {
-        let unit = r.direction().normalize();
-        let t = 0.5 * (unit.y + 1.) as f32;
-        // interpolate between blue at the top and white at the bottom
-        (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
+pub fn color(r: &Ray, world: &World<'_>, depth: usize) -> Color {
+    match world.bounce(&r, 0.001, FMAX) {
+        Some(bounce) => {
+            if depth > 0 {
+                if let Some(scatrec) = (bounce.mat).scatter(r, &bounce) {
+                    return color(&(scatrec.scattered), world, depth - 1);
+                } else {
+                    return Color::new(0.0, 0.0, 0.0);
+                }
+            } else {
+                return Color::new(0.0, 0.0, 0.0);
+            }
+        }
+        None => {
+            let unit = r.direction().normalize();
+            let t = 0.5 * (unit.y + 1.) as f32;
+            // interpolate between blue at the top and white at the bottom
+            (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
+        }
     }
 }
