@@ -41,7 +41,7 @@ impl Visible for World<'_> {
             if let Some(bounce) = thing.bounce(r, t_min, t_max) {
                 match ret {
                     None => ret = Some(bounce),
-                    Some(prev) => {
+                    Some(ref prev) => {
                         if bounce.t < prev.t {
                             ret = Some(bounce)
                         }
@@ -65,12 +65,12 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn color(r: &Ray, world: &mut World<'_>, depth: usize) -> Color {
-    match world.bounce(&r, 0.001, FMAX).as_mut() {
+pub fn color(r: &Ray, world: &World<'_>, depth: usize) -> Color {
+    match world.bounce(&r, 0.001, FMAX) {
         Some(bounce) => {
-            if depth < 50 {
-                if let Some(scatrec) = (bounce.mat).scatter(r, bounce) {
-                    return color(&(scatrec.scattered), world, depth + 1);
+            if depth > 0 {
+                if let Some(scatrec) = (bounce.mat).scatter(r, &bounce) {
+                    return color(&(scatrec.scattered), world, depth - 1);
                 } else {
                     return Color::new(0.0, 0.0, 0.0);
                 }
