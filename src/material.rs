@@ -12,8 +12,10 @@ pub trait Material {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord>;
 }
 
-pub struct Metal {
+pub struct Metal<R: Rng> {
     albedo: Color,
+    fuzz: f64,
+    rng: RefCell<R>,
 }
 
 pub struct Lambertian<R: Rng> {
@@ -21,9 +23,17 @@ pub struct Lambertian<R: Rng> {
     rng: RefCell<R>,
 }
 
-impl Metal {
-    pub fn new(albedo: Color) -> Self {
-        Metal { albedo }
+impl<R: Rng> Metal<R> {
+    pub fn new(albedo: Color, fuzz: f64, rng: R) -> Self {
+        Metal {
+            albedo,
+            fuzz: match fuzz {
+                fuzz if fuzz < 0.0 => 0.0,
+                fuzz if fuzz < 1.0 => fuzz,
+                _ => 1.0,
+            },
+            rng: RefCell::new(rng),
+        }
     }
 }
 
@@ -51,10 +61,13 @@ fn reflect(v: &Point, n: &Point) -> Point {
     *v - *n * 2.0 * v.dot(*n)
 }
 
-impl Material for Metal {
+impl<R: Rng> Material for Metal<R> {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
         let reflected = reflect(&(ray_in.direction().normalize()), &bounce.n);
-        let scattered = Ray::new(bounce.p, reflected);
+        let scattered = Ray::new(
+            bounce.p,
+            reflected + (random_unit_point(&mut *(self.rng.borrow_mut())) * self.fuzz),
+        );
         if scattered.direction().dot(bounce.n) > 0.0 {
             Some(ScatterRecord {
                 attenuation: self.albedo.clone(),

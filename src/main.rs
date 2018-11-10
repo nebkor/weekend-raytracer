@@ -35,17 +35,17 @@ fn main() {
         &Sphere::new(
             Point::new(0.0, -100.5, -1.0),
             100.0,
-            Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.8), rng.clone())),
+            Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.1), rng.clone())),
         ),
         &Sphere::new(
             Point::new(1.0, 0.0, -1.0),
             0.5,
-            Box::new(Metal::new(Color::new(0.8, 0.6, 0.2))),
+            Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.3, rng.clone())),
         ),
         &Sphere::new(
             Point::new(-1.0, 0.0, -1.0),
             0.5,
-            Box::new(Metal::new(Color::new(0.8, 0.8, 0.8))),
+            Box::new(Metal::new(Color::new(0.8, 0.8, 0.8), 1.0, rng.clone())),
         ),
     ];
 
@@ -94,8 +94,6 @@ fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
                 let r = cam.ray(u, v);
                 col += color(&r, &world, 51);
             }
-
-            //let col = (col / NS as f32) * SF;
             let col = (col / NS as f32).gamma_correct(GAMMA) * SF;
             let v: Coloru8 = col.cast();
             imgbuf.extend_from_slice(&(v.to_array()));
