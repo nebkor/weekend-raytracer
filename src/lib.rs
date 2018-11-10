@@ -17,7 +17,7 @@ impl MulAss for Color {
         self.x *= rhs.x;
         self.y *= rhs.y;
         self.z *= rhs.z;
-        self.clone()
+        *self
     }
 }
 
@@ -89,7 +89,7 @@ pub fn color(r: &Ray, world: &World<'_>, depth: usize) -> Color {
                     return Color::new(0.0, 0.0, 0.0);
                 }
             } else {
-                return Color::new(0.0, 0.0, 0.0);
+                Color::new(0.0, 0.0, 0.0)
             }
         }
         None => {

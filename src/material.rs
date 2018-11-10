@@ -51,7 +51,7 @@ impl<R: Rng> Material for Lambertian<R> {
         let target = bounce.p + bounce.n + random_unit_point(&mut *(self.rng.borrow_mut()));
         let scattered = Ray::new(bounce.p, target - bounce.p);
         Some(ScatterRecord {
-            attenuation: self.albedo.clone(),
+            attenuation: self.albedo,
             scattered,
         })
     }
@@ -70,7 +70,7 @@ impl<R: Rng> Material for Metal<R> {
         );
         if scattered.direction().dot(bounce.n) > 0.0 {
             Some(ScatterRecord {
-                attenuation: self.albedo.clone(),
+                attenuation: self.albedo,
                 scattered,
             })
         } else {
