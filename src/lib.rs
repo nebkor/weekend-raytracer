@@ -8,6 +8,19 @@ pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
 pub type Point = Vector3D<f64>;
 
+pub trait MulAss {
+    fn mul_ass(&mut self, rhs: Self) -> Self;
+}
+
+impl MulAss for Color {
+    fn mul_ass(&mut self, rhs: Self) -> Self {
+        self.x *= rhs.x;
+        self.y *= rhs.y;
+        self.z *= rhs.z;
+        self.clone()
+    }
+}
+
 mod sphere;
 pub use crate::sphere::Sphere;
 
@@ -70,7 +83,8 @@ pub fn color(r: &Ray, world: &World<'_>, depth: usize) -> Color {
         Some(bounce) => {
             if depth > 0 {
                 if let Some(scatrec) = (bounce.mat).scatter(r, &bounce) {
-                    return color(&(scatrec.scattered), world, depth - 1);
+                    return color(&(scatrec.scattered), world, depth - 1)
+                        .mul_ass(scatrec.attenuation);
                 } else {
                     return Color::new(0.0, 0.0, 0.0);
                 }

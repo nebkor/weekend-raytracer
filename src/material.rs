@@ -1,10 +1,10 @@
-use crate::{random_unit_point, Bounce, Point, Ray, Rng};
+use crate::{random_unit_point, Bounce, Color, Point, Ray, Rng};
 use std::cell::RefCell;
 
 pub type BoxMat = Box<dyn Material>;
 
 pub struct ScatterRecord {
-    pub attenuation: Point,
+    pub attenuation: Color,
     pub scattered: Ray,
 }
 
@@ -13,22 +13,22 @@ pub trait Material {
 }
 
 pub struct Metal {
-    albedo: Point,
+    albedo: Color,
 }
 
 pub struct Lambertian<R: Rng> {
-    albedo: Point,
+    albedo: Color,
     rng: RefCell<R>,
 }
 
 impl Metal {
-    pub fn new(albedo: Point) -> Self {
+    pub fn new(albedo: Color) -> Self {
         Metal { albedo }
     }
 }
 
 impl<R: Rng> Lambertian<R> {
-    pub fn new(albedo: Point, rng: R) -> Self {
+    pub fn new(albedo: Color, rng: R) -> Self {
         Lambertian {
             albedo,
             rng: RefCell::new(rng),
