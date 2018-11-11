@@ -91,6 +91,11 @@ fn refract(v: &Point, n: &Point, ni_nt: f64) -> Option<Point> {
     }
 }
 
+fn schlick(cosine: f64, refractive_index: f64) -> f64 {
+    let r0 = ((1.0 - refractive_index) / (1.0 + refractive_index)).powi(2);
+    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+}
+
 pub struct Dialectric<R: Rng> {
     refractive_index: f64,
     rng: RefCell<R>,
@@ -109,19 +114,30 @@ impl<R: Rng> Material for Dialectric<R> {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
         let attenuation = Color::new(1.0, 1.0, 1.0);
         let reflected = reflect(&ray_in.direction(), &bounce.n);
-        let (ni_nt, outward_normal) = if ray_in.direction().dot(bounce.n) > 0.0 {
-            (self.refractive_index, bounce.n * -1.0)
+        let norm_dot = ray_in.direction().dot(bounce.n);
+        let (ni_nt, outward_normal, cosine) = if norm_dot > 0.0 {
+            let cosine = self.refractive_index * norm_dot / ray_in.direction().length();
+            (self.refractive_index, bounce.n * -1.0, cosine)
         } else {
-            (1.0 / self.refractive_index, bounce.n)
+            let cosine = -1.0 * norm_dot / ray_in.direction().length();
+            (1.0 / self.refractive_index, bounce.n, cosine)
         };
 
-        if let Some(refracted) = refract(&ray_in.direction(), &outward_normal, ni_nt) {
-            Some(ScatterRecord {
+        match refract(&ray_in.direction(), &outward_normal, ni_nt) {
+            Some(refracted) => Some(ScatterRecord {
                 attenuation,
-                scattered: Ray::new(bounce.p, refracted),
-            })
-        } else {
-            None
+                scattered: if self.rng.borrow_mut().gen::<f64>()
+                    < schlick(cosine, self.refractive_index)
+                {
+                    Ray::new(bounce.p, reflected)
+                } else {
+                    Ray::new(bounce.p, refracted)
+                },
+            }),
+            None => Some(ScatterRecord {
+                attenuation,
+                scattered: Ray::new(bounce.p, reflected),
+            }),
         }
     }
 }

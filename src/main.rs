@@ -47,6 +47,11 @@ fn main() {
             0.5,
             Box::new(Dialectric::new(1.5, rng.clone())),
         ),
+        &Sphere::new(
+            Point::new(-1.0, 0.0, -1.0),
+            -0.45,
+            Box::new(Dialectric::new(1.5, rng.clone())),
+        ),
     ];
 
     let outfile = get_outfile();
