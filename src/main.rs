@@ -8,8 +8,8 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
-const NX: u32 = 800;
-const NY: u32 = 400;
+const NX: u32 = 600;
+const NY: u32 = 300;
 const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 const GAMMA: f32 = 2.0;
@@ -30,22 +30,22 @@ fn main() {
         &Sphere::new(
             Point::new(0.0, 0.0, -1.0),
             0.5,
-            Box::new(Lambertian::new(Color::new(0.8, 0.3, 0.3), rng.clone())),
+            Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5), rng.clone())),
         ),
         &Sphere::new(
             Point::new(0.0, -100.5, -1.0),
             100.0,
-            Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.1), rng.clone())),
+            Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0), rng.clone())),
         ),
         &Sphere::new(
             Point::new(1.0, 0.0, -1.0),
             0.5,
-            Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.3, rng.clone())),
+            Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0, rng.clone())),
         ),
         &Sphere::new(
             Point::new(-1.0, 0.0, -1.0),
             0.5,
-            Box::new(Metal::new(Color::new(0.8, 0.8, 0.8), 1.0, rng.clone())),
+            Box::new(Dialectric::new(1.5, rng.clone())),
         ),
     ];
 

@@ -78,3 +78,50 @@ impl<R: Rng> Material for Metal<R> {
         }
     }
 }
+
+fn refract(v: &Point, n: &Point, ni_nt: f64) -> Option<Point> {
+    let unit = v.normalize();
+    let dt = unit.dot(*n);
+    let discrim: f64 = 1.0 - ni_nt.powi(2) * (1.0 - dt.powi(2));
+    if discrim > 0.0 {
+        let refracted = (unit - *n * dt) * ni_nt - *n * discrim.sqrt();
+        Some(refracted)
+    } else {
+        None
+    }
+}
+
+pub struct Dialectric<R: Rng> {
+    refractive_index: f64,
+    rng: RefCell<R>,
+}
+
+impl<R: Rng> Dialectric<R> {
+    pub fn new(refractive_index: f64, rng: R) -> Self {
+        Dialectric {
+            refractive_index,
+            rng: RefCell::new(rng),
+        }
+    }
+}
+
+impl<R: Rng> Material for Dialectric<R> {
+    fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let reflected = reflect(&ray_in.direction(), &bounce.n);
+        let (ni_nt, outward_normal) = if ray_in.direction().dot(bounce.n) > 0.0 {
+            (self.refractive_index, bounce.n * -1.0)
+        } else {
+            (1.0 / self.refractive_index, bounce.n)
+        };
+
+        if let Some(refracted) = refract(&ray_in.direction(), &outward_normal, ni_nt) {
+            Some(ScatterRecord {
+                attenuation,
+                scattered: Ray::new(bounce.p, refracted),
+            })
+        } else {
+            None
+        }
+    }
+}
