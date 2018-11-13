@@ -14,44 +14,30 @@ const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 const GAMMA: f32 = 2.0;
 
-const SEED: [u32; 4] = [0x193a_6754, 0xa8a7_d469, 0x9783_0e05, 0x113b_a7bb];
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 //--------------------------------------------------------------------
 fn main() {
     let cam = Camera::default();
 
-    let mut seed: [u8; 16] = [0; 16];
-    unsafe { seed.copy_from_slice(SEED.align_to::<u8>().1) };
-    let rng = SmallRng::from_seed(seed);
-
     let world: World<'_> = &[
         &Sphere::new(
             Point::new(0.0, 0.0, -1.0),
             0.5,
-            Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5), rng.clone())),
+            MatSpec::Lambertian(Color::new(0.1, 0.2, 0.5)),
         ),
         &Sphere::new(
             Point::new(0.0, -100.5, -1.0),
             100.0,
-            Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0), rng.clone())),
+            MatSpec::Lambertian(Color::new(0.8, 0.8, 0.0)),
         ),
         &Sphere::new(
             Point::new(1.0, 0.0, -1.0),
             0.5,
-            Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0, rng.clone())),
+            MatSpec::Metal(Color::new(0.8, 0.6, 0.2), 0.0),
         ),
-        &Sphere::new(
-            Point::new(-1.0, 0.0, -1.0),
-            0.5,
-            Box::new(Dialectric::new(1.5, rng.clone())),
-        ),
-        &Sphere::new(
-            Point::new(-1.0, 0.0, -1.0),
-            -0.45,
-            Box::new(Dialectric::new(1.5, rng.clone())),
-        ),
+        &Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, MatSpec::Dialectric(1.5)),
+        &Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.45, MatSpec::Dialectric(1.5)),
     ];
 
     let outfile = get_outfile();
@@ -77,7 +63,7 @@ fn get_outfile() -> String {
 //--------------------------------------------------------------------
 fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
     let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = get_rng();
 
     let pngfile = format!("{}.png", filename);
     let path = Path::new(&pngfile);

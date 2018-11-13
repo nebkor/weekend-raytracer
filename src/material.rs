@@ -1,4 +1,5 @@
-use crate::{random_unit_point, Bounce, Color, Point, Ray, Rng};
+use crate::{get_rng, random_unit_point, Bounce, Color, Point, Ray};
+use rand::prelude::*;
 use std::cell::RefCell;
 
 pub type BoxMat = Box<dyn Material>;
@@ -12,19 +13,25 @@ pub trait Material {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord>;
 }
 
-pub struct Metal<R: Rng> {
+pub enum MatSpec {
+    Lambertian(Color),
+    Metal(Color, f64),
+    Dialectric(f64),
+}
+
+pub struct Metal {
     albedo: Color,
     fuzz: f64,
-    rng: RefCell<R>,
+    rng: RefCell<SmallRng>,
 }
 
-pub struct Lambertian<R: Rng> {
+pub struct Lambertian {
     albedo: Color,
-    rng: RefCell<R>,
+    rng: RefCell<SmallRng>,
 }
 
-impl<R: Rng> Metal<R> {
-    pub fn new(albedo: Color, fuzz: f64, rng: R) -> Self {
+impl Metal {
+    pub fn new(albedo: Color, fuzz: f64) -> Self {
         Metal {
             albedo,
             fuzz: match fuzz {
@@ -32,21 +39,21 @@ impl<R: Rng> Metal<R> {
                 fuzz if fuzz < 1.0 => fuzz,
                 _ => 1.0,
             },
-            rng: RefCell::new(rng),
+            rng: RefCell::new(get_rng()),
         }
     }
 }
 
-impl<R: Rng> Lambertian<R> {
-    pub fn new(albedo: Color, rng: R) -> Self {
+impl Lambertian {
+    pub fn new(albedo: Color) -> Self {
         Lambertian {
             albedo,
-            rng: RefCell::new(rng),
+            rng: RefCell::new(get_rng()),
         }
     }
 }
 
-impl<R: Rng> Material for Lambertian<R> {
+impl Material for Lambertian {
     fn scatter(&self, _ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
         let target = bounce.p + bounce.n + random_unit_point(&mut *(self.rng.borrow_mut()));
         let scattered = Ray::new(bounce.p, target - bounce.p);
@@ -61,7 +68,7 @@ fn reflect(v: &Point, n: &Point) -> Point {
     *v - *n * 2.0 * v.dot(*n)
 }
 
-impl<R: Rng> Material for Metal<R> {
+impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
         let reflected = reflect(&(ray_in.direction().normalize()), &bounce.n);
         let scattered = Ray::new(
@@ -96,21 +103,21 @@ fn schlick(cosine: f64, refractive_index: f64) -> f64 {
     r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }
 
-pub struct Dialectric<R: Rng> {
+pub struct Dialectric {
     refractive_index: f64,
-    rng: RefCell<R>,
+    rng: RefCell<SmallRng>,
 }
 
-impl<R: Rng> Dialectric<R> {
-    pub fn new(refractive_index: f64, rng: R) -> Self {
+impl Dialectric {
+    pub fn new(refractive_index: f64) -> Self {
         Dialectric {
             refractive_index,
-            rng: RefCell::new(rng),
+            rng: RefCell::new(get_rng()),
         }
     }
 }
 
-impl<R: Rng> Material for Dialectric<R> {
+impl Material for Dialectric {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord> {
         let attenuation = Color::new(1.0, 1.0, 1.0);
         let reflected = reflect(&ray_in.direction(), &bounce.n);

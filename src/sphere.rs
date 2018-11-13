@@ -9,11 +9,17 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64, mat: BoxMat) -> Self {
+    pub fn new(center: Point, radius: f64, mat: MatSpec) -> Self {
         Sphere {
             center,
             radius,
-            mat,
+            mat: match mat {
+                MatSpec::Lambertian(albedo) => Box::new(Lambertian::new(albedo)),
+                MatSpec::Metal(albedo, fuzz) => Box::new(Metal::new(albedo, fuzz)),
+                MatSpec::Dialectric(refractive_index) => {
+                    Box::new(Dialectric::new(refractive_index))
+                }
+            },
         }
     }
 

@@ -1,12 +1,19 @@
 use std::f64::MAX as FMAX;
 
 pub use rand::prelude::*;
-pub use rand::FromEntropy;
 
 use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
 pub type Point = Vector3D<f64>;
+
+const SEED: [u32; 4] = [0x193a_6754, 0xa8a7_d469, 0x9783_0e05, 0x113b_a7bb];
+
+pub fn get_rng() -> SmallRng {
+    let mut s: [u8; 16] = [0; 16];
+    unsafe { s.copy_from_slice(SEED.align_to::<u8>().1) };
+    SmallRng::from_seed(s)
+}
 
 pub trait MulAss {
     fn mul_ass(&mut self, rhs: Self) -> Self;
