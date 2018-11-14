@@ -13,10 +13,21 @@ pub trait Material {
     fn scatter(&self, ray_in: &Ray, bounce: &Bounce) -> Option<ScatterRecord>;
 }
 
+#[derive(Clone)]
 pub enum MatSpec {
     Lambertian(Color),
     Metal(Color, f64),
     Dialectric(f64),
+}
+
+impl MatSpec {
+    pub fn box_mat(self) -> BoxMat {
+        match self {
+            MatSpec::Lambertian(albedo) => Box::new(Lambertian::new(albedo)),
+            MatSpec::Metal(albedo, fuzz) => Box::new(Metal::new(albedo, fuzz)),
+            MatSpec::Dialectric(refractive_index) => Box::new(Dialectric::new(refractive_index)),
+        }
+    }
 }
 
 pub struct Metal {

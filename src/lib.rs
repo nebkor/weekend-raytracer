@@ -2,12 +2,15 @@ use std::f64::MAX as FMAX;
 
 pub use rand::prelude::*;
 
+use clap::{App, Arg};
+
 use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
 pub type Point = Vector3D<f64>;
 
 const SEED: [u32; 4] = [0x193a_6754, 0xa8a7_d469, 0x9783_0e05, 0x113b_a7bb];
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn get_rng() -> SmallRng {
     let mut s: [u8; 16] = [0; 16];
@@ -26,6 +29,21 @@ impl MulAss for Color {
         self.z *= rhs.z;
         *self
     }
+}
+
+//--------------------------------------------------------------------
+pub fn get_outfile() -> String {
+    let args = App::new("Weekend Raytracer")
+        .version(VERSION)
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("Sets the basename of the PNG output file.")
+                .required(true)
+                .index(1),
+        )
+        .get_matches();
+
+    args.value_of("OUTPUT").unwrap().into()
 }
 
 mod sphere;

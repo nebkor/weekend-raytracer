@@ -13,13 +13,7 @@ impl Sphere {
         Sphere {
             center,
             radius,
-            mat: match mat {
-                MatSpec::Lambertian(albedo) => Box::new(Lambertian::new(albedo)),
-                MatSpec::Metal(albedo, fuzz) => Box::new(Metal::new(albedo, fuzz)),
-                MatSpec::Dialectric(refractive_index) => {
-                    Box::new(Dialectric::new(refractive_index))
-                }
-            },
+            mat: mat.box_mat(),
         }
     }
 

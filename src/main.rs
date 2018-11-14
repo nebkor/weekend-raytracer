@@ -1,20 +1,10 @@
 use raytracer::*;
 
-use png::HasParameters;
-
-use clap::{App, Arg};
-
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
-
 const NX: u32 = 600;
 const NY: u32 = 300;
 const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 const GAMMA: f32 = 2.0;
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 //--------------------------------------------------------------------
 fn main() {
@@ -46,22 +36,12 @@ fn main() {
 }
 
 //--------------------------------------------------------------------
-fn get_outfile() -> String {
-    let args = App::new("Weekend Raytracer")
-        .version(VERSION)
-        .arg(
-            Arg::with_name("OUTPUT")
-                .help("Sets the basename of the PNG output file.")
-                .required(true)
-                .index(1),
-        )
-        .get_matches();
-
-    args.value_of("OUTPUT").unwrap().into()
-}
-
-//--------------------------------------------------------------------
 fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
+    use png::HasParameters;
+    use std::fs::File;
+    use std::io::BufWriter;
+    use std::path::Path;
+
     let mut imgbuf = ImageBuf::with_capacity(NX as usize * NY as usize * 4);
     let mut rng = get_rng();
 
