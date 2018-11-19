@@ -16,8 +16,8 @@ pub trait Material {
 #[derive(Clone)]
 pub enum MatSpec {
     Lambertian(Color),
-    Metal(Color, f64),
-    Dialectric(f64),
+    Metal(Color, f32),
+    Dialectric(f32),
 }
 
 impl MatSpec {
@@ -32,7 +32,7 @@ impl MatSpec {
 
 pub struct Metal {
     albedo: Color,
-    fuzz: f64,
+    fuzz: f32,
     rng: RefCell<SmallRng>,
 }
 
@@ -42,7 +42,7 @@ pub struct Lambertian {
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f64) -> Self {
+    pub fn new(albedo: Color, fuzz: f32) -> Self {
         Metal {
             albedo,
             fuzz: match fuzz {
@@ -97,10 +97,10 @@ impl Material for Metal {
     }
 }
 
-fn refract(v: &Point, n: &Point, ni_nt: f64) -> Option<Point> {
+fn refract(v: &Point, n: &Point, ni_nt: f32) -> Option<Point> {
     let unit = v.normalize();
     let dt = unit.dot(*n);
-    let discrim: f64 = 1.0 - ni_nt.powi(2) * (1.0 - dt.powi(2));
+    let discrim: f32 = 1.0 - ni_nt.powi(2) * (1.0 - dt.powi(2));
     if discrim > 0.0 {
         let refracted = (unit - *n * dt) * ni_nt - *n * discrim.sqrt();
         Some(refracted)
@@ -109,18 +109,18 @@ fn refract(v: &Point, n: &Point, ni_nt: f64) -> Option<Point> {
     }
 }
 
-fn schlick(cosine: f64, refractive_index: f64) -> f64 {
+fn schlick(cosine: f32, refractive_index: f32) -> f32 {
     let r0 = ((1.0 - refractive_index) / (1.0 + refractive_index)).powi(2);
     r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }
 
 pub struct Dialectric {
-    refractive_index: f64,
+    refractive_index: f32,
     rng: RefCell<SmallRng>,
 }
 
 impl Dialectric {
-    pub fn new(refractive_index: f64) -> Self {
+    pub fn new(refractive_index: f32) -> Self {
         Dialectric {
             refractive_index,
             rng: RefCell::new(get_rng()),
@@ -144,7 +144,7 @@ impl Material for Dialectric {
         match refract(&ray_in.direction(), &outward_normal, ni_nt) {
             Some(refracted) => Some(ScatterRecord {
                 attenuation,
-                scattered: if self.rng.borrow_mut().gen::<f64>()
+                scattered: if self.rng.borrow_mut().gen::<f32>()
                     < schlick(cosine, self.refractive_index)
                 {
                     Ray::new(bounce.p, reflected)

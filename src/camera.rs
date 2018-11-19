@@ -18,7 +18,7 @@ impl Camera {
         }
     }
 
-    pub fn ray(&self, u: f64, v: f64) -> Ray {
+    pub fn ray(&self, u: f32, v: f32) -> Ray {
         let uv = self.lower_left_ + (self.horizontal_ * u) + (self.vertical_ * v) - self.origin_;
         Ray::new(self.origin_, uv)
     }

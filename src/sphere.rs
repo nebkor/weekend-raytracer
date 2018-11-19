@@ -4,12 +4,12 @@ use crate::Point;
 
 pub struct Sphere {
     pub center: Point,
-    pub radius: f64,
+    pub radius: f32,
     pub mat: BoxMat,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64, mat: MatSpec) -> Self {
+    pub fn new(center: Point, radius: f32, mat: MatSpec) -> Self {
         Sphere {
             center,
             radius,
@@ -21,13 +21,13 @@ impl Sphere {
         &self.center
     }
 
-    pub fn radius(&self) -> f64 {
+    pub fn radius(&self) -> f32 {
         self.radius
     }
 }
 
 impl Visible for Sphere {
-    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce> {
+    fn bounce(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<Bounce> {
         let oc = r.origin() - *self.center();
         let rd = r.direction();
         // a, b, c correspond to quadratic equation terms

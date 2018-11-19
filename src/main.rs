@@ -1,7 +1,7 @@
 use raytracer::*;
 
-const NX: u32 = 600;
-const NY: u32 = 300;
+const NX: u32 = 900;
+const NY: u32 = 450;
 const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 const GAMMA: f32 = 2.0;
@@ -60,8 +60,8 @@ fn render_to_file(cam: &Camera, world: &World<'_>, filename: &str) {
         for i in 0..NX {
             let mut col = Color::new(0.0, 0.0, 0.0);
             for _sub_sample in 0..NS {
-                let u = (f64::from(i) + rng.gen::<f64>()) / f64::from(NX);
-                let v = (f64::from(j) + rng.gen::<f64>()) / f64::from(NY);
+                let u = (i as f32 + rng.gen::<f32>()) / NX as f32;
+                let v = (j as f32 + rng.gen::<f32>()) / NY as f32;
                 let r = cam.ray(u, v);
                 col += color(&r, &world, 51);
             }

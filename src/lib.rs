@@ -1,4 +1,4 @@
-use std::f64::MAX as FMAX;
+use std::f32::MAX as FMAX;
 
 pub use rand::prelude::*;
 
@@ -7,7 +7,7 @@ use clap::{App, Arg};
 use euclid::*;
 pub type Color = Vector3D<f32>;
 pub type Coloru8 = Vector3D<u8>;
-pub type Point = Vector3D<f64>;
+pub type Point = Vector3D<f32>;
 
 const SEED: [u32; 4] = [0x193a_6754, 0xa8a7_d469, 0x9783_0e05, 0x113b_a7bb];
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -73,7 +73,7 @@ impl Gamma for Color {
 }
 
 impl Visible for World<'_> {
-    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce> {
+    fn bounce(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<Bounce> {
         let mut ret: Option<Bounce> = None;
         for thing in self.iter() {
             if let Some(bounce) = thing.bounce(r, t_min, t_max) {

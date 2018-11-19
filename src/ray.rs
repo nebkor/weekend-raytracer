@@ -9,20 +9,20 @@ pub struct Ray {
 
 #[derive(Clone)]
 pub struct Bounce<'m> {
-    pub t: f64,
+    pub t: f32,
     pub p: Point,
     pub n: Point,
     pub mat: &'m BoxMat,
 }
 
 impl<'m> Bounce<'m> {
-    pub fn new(t: f64, p: Point, n: Point, mat: &'m BoxMat) -> Self {
+    pub fn new(t: f32, p: Point, n: Point, mat: &'m BoxMat) -> Self {
         Bounce { t, p, n, mat }
     }
 }
 
 pub trait Visible {
-    fn bounce(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<Bounce>;
+    fn bounce(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<Bounce>;
 }
 
 impl Ray {
@@ -38,7 +38,7 @@ impl Ray {
         self.a
     }
 
-    pub fn pt_at_param(&self, t: f64) -> Point {
+    pub fn pt_at_param(&self, t: f32) -> Point {
         self.a + (self.b * t)
     }
 }
