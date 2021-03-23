@@ -17,7 +17,7 @@ const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const CHAPTER: &str = "chapter4";
+const CHAPTER: &str = "chapter5";
 
 fn write_png(out: &str, framebuffer: &[u8]) {
     let pngfile = format!("{}.png", out);
@@ -28,7 +28,7 @@ fn write_png(out: &str, framebuffer: &[u8]) {
         Err(e) => panic!("got {:?} we r ded", e),
     };
 
-    let ref mut w = BufWriter::new(file);
+    let w = BufWriter::new(file);
     let mut encoder = png::Encoder::new(w, NX, NY); // Width is nx pixels and height is ny
     encoder.set_color(png::ColorType::RGB);
     encoder.set_depth(png::BitDepth::Eight);

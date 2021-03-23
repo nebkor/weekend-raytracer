@@ -23,9 +23,22 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point3 {
     p
 }
 
+pub fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let oc = *r.origin() - *center;
+    let a = r.direction().square_length();
+    let b = oc.dot(*r.direction()) * 2.0;
+    let c = oc.square_length() - radius.powi(2);
+    let discrm = b.powi(2) - 4.0 * a * c;
+    discrm > 0.0
+}
+
 pub fn color(r: &Ray) -> Color {
-    let unit = r.direction().normalize();
-    let t = 0.5 * (unit.y + 1.) as f32;
-    // interpolate between blue at the top and white at the bottom
-    (Color::new(1., 1., 1.) * (1.0 - t)) + (Color::new(0.5, 0.7, 1.0) * t)
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, &r) {
+        Color::new(1.0, 0.0, 0.0)
+    } else {
+        let unit = r.direction().normalize();
+        let t = 0.5 * (unit.y + 1.) as f32;
+        // interpolate between blue at the top and white at the bottom
+        (Color::new(1., 1., 1.) * (1.0 - t)) + (Color::new(0.5, 0.7, 1.0) * t)
+    }
 }
