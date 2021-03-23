@@ -1,10 +1,7 @@
-#![feature(rust_2018_preview)]
-
-extern crate raytracer;
 use raytracer::*;
 
-extern crate png;
-use png::HasParameters;
+use chrono::Local;
+use png;
 
 extern crate clap;
 use clap::{App, Arg};
@@ -18,20 +15,23 @@ const NY: u32 = 400;
 const NS: u32 = 100;
 const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+const CHAPTER: &str = "chapter4";
 
 fn write_png(out: &str, framebuffer: &[u8]) {
     let pngfile = format!("{}.png", out);
     let path = Path::new(&pngfile);
 
-    let file = match File::create(path.clone()) {
+    let file = match File::create(path) {
         Ok(f) => f,
-        Err(e) => panic!(format!("got {:?} we r ded", e)),
+        Err(e) => panic!("got {:?} we r ded", e),
     };
 
     let ref mut w = BufWriter::new(file);
     let mut encoder = png::Encoder::new(w, NX, NY); // Width is nx pixels and height is ny
-    encoder.set(png::ColorType::RGB).set(png::BitDepth::Eight);
+    encoder.set_color(png::ColorType::RGB);
+    encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
 
     writer.write_image_data(framebuffer).unwrap();
@@ -40,41 +40,52 @@ fn write_png(out: &str, framebuffer: &[u8]) {
 }
 
 fn main() {
+    let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
+    let default_file = format!("{}/{}", CHAPTER, now);
     let args = App::new("Weekend Raytracer")
         .version(VERSION)
         .arg(
             Arg::with_name("OUTPUT")
                 .help("Sets the basename of the PNG output file.")
-                .required(true)
+                .required(false)
+                .default_value(&default_file)
                 .index(1),
-        ).get_matches();
+        )
+        .get_matches();
 
     let outfile = args.value_of("OUTPUT").unwrap();
 
-    let cam = Camera::default();
-
-    let world: World = vec![
-        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
-    ];
+    dbg!(outfile);
 
     let mut data: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
 
-    let mut rng = SmallRng::from_entropy();
+    let WIDTH = NX as f64;
+    let HEIGHT = NY as f64;
+    let ratio = WIDTH / HEIGHT;
+
+    // fake out a camera
+    let viewport_h = 2.0;
+    let viewport_w = ratio * viewport_h;
+    let focal_len = 1.0;
+
+    let origin = Point3::default();
+    let horizontal = Vec3::new(viewport_w, 0.0, 0.0);
+    let vertical = Vec3::new(0.0, viewport_h, 0.0);
+    let lower_left_corner =
+        origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_len);
 
     // Now the real rendering work:
-    for j in (0..NY).rev() {
+    for j in (0..NY) {
         for i in 0..NX {
-            let mut col = Color::new(0.0, 0.0, 0.0);
-            for _s in 0..NS {
-                let u = (i as f64 + rng.gen::<f64>()) / NX as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / NY as f64;
-                let r = cam.ray(u, v);
-                // let p = r.pt_at_param(2.0);
-                col = col + color(r, &world, &mut rng);
-            }
+            let u = i as f64 / WIDTH;
+            let v = j as f64 / HEIGHT;
+            let r = Ray::new(
+                origin,
+                lower_left_corner + horizontal * u + vertical * v - origin,
+            );
+            let col = color(&r);
 
-            let c = (col / NS as f32).gamma_correct(2.0) * SF;
+            let c = col * SF;
             let v: Coloru8 = c.cast();
             data.extend_from_slice(v.to_array().as_ref());
         }

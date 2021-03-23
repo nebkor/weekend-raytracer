@@ -1,61 +1,21 @@
-#![feature(rust_2018_preview)]
+// use std::f64::MAX as FMAX;
 
-use std::f64::MAX as FMAX;
-
-extern crate rand;
+use euclid::Vector3D;
 pub use rand::prelude::*;
-pub use rand::FromEntropy;
 
-extern crate euclid;
-use euclid::*;
-pub type Color = Vector3D<f32>;
-pub type Coloru8 = Vector3D<u8>;
-pub type Point = Vector3D<f64>;
-
-mod sphere;
-pub use crate::sphere::Sphere;
-
-mod camera;
-pub use crate::camera::Camera;
+pub type Color = Vector3D<f32, ()>;
+pub type Coloru8 = Vector3D<u8, ()>;
+pub type Point3 = Vector3D<f64, ()>;
+pub type Vec3 = Vector3D<f64, ()>;
 
 mod ray;
-pub use crate::ray::*;
+pub use ray::*;
 
-pub type World = Vec<Box<dyn Glimmer>>;
-
-pub trait Gamma {
-    fn gamma_correct(&self, factor: f32) -> Self;
-}
-
-impl Gamma for Color {
-    fn gamma_correct(&self, factor: f32) -> Self {
-        let pow = 1.0 / factor;
-        Color::new(self.x.powf(pow), self.y.powf(pow), self.z.powf(pow))
-    }
-}
-
-impl Glimmer for World {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut record: Option<HitRecord> = None;
-        for thing in self {
-            if let Some(hr) = thing.glimmer(r, t_min, t_max) {
-                match record {
-                    None => record = Some(hr),
-                    Some(prev) => if hr.t < prev.t {
-                        record = Some(hr)
-                    },
-                }
-            }
-        }
-        record
-    }
-}
-
-pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
-    let mut p: Point;
-    let one = Point::new(1.0, 1.0, 1.0);
+pub fn random_unit_point<R: Rng>(r: &mut R) -> Point3 {
+    let mut p: Point3;
+    let one = Point3::new(1.0, 1.0, 1.0);
     loop {
-        p = (Point::new(r.gen(), r.gen(), r.gen()) * 2.0) - one;
+        p = (Point3::new(r.gen(), r.gen(), r.gen()) * 2.0) - one;
         if p.square_length() < 1.0 {
             break;
         }
@@ -63,14 +23,9 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point {
     p
 }
 
-pub fn color<R: Rng>(r: Ray, world: &Vec<Box<dyn Glimmer>>, rng: &mut R) -> Color {
-    if let Some(rec) = world.glimmer(&r, 0.001, FMAX) {
-        let target = rec.p + rec.n + random_unit_point(rng);
-        color(Ray::new(rec.p, target - rec.p), world, rng) * 0.5
-    } else {
-        let unit = r.direction().normalize();
-        let t = 0.5 * (unit.y + 1.) as f32;
-        // interpolate between blue at the top and white at the bottom
-        (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
-    }
+pub fn color(r: &Ray) -> Color {
+    let unit = r.direction().normalize();
+    let t = 0.5 * (unit.y + 1.) as f32;
+    // interpolate between blue at the top and white at the bottom
+    (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
 }

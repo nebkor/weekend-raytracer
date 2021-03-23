@@ -1,42 +1,25 @@
-use crate::Point;
+use crate::Point3;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray {
-    a: Point,
-    b: Point,
-}
-
-#[derive(Clone, Copy)]
-pub struct HitRecord {
-    pub t: f64,
-    pub p: Point,
-    pub n: Point,
-}
-
-impl HitRecord {
-    pub fn new(t: f64, p: Point, n: Point) -> Self {
-        HitRecord { t, p, n }
-    }
-}
-
-pub trait Glimmer {
-    fn glimmer(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    origin: Point3,
+    dir: Point3,
 }
 
 impl Ray {
-    pub fn new(a: Point, b: Point) -> Self {
-        Ray { a, b }
+    pub fn new(origin: Point3, dir: Point3) -> Self {
+        Ray { origin, dir }
     }
 
-    pub fn direction(&self) -> Point {
-        self.b - self.a
+    pub fn direction(&self) -> &Point3 {
+        &self.dir
     }
 
-    pub fn origin(&self) -> Point {
-        self.a
+    pub fn origin(&self) -> &Point3 {
+        &self.origin
     }
 
-    pub fn pt_at_param(&self, t: f64) -> Point {
-        self.a + (self.b * t)
+    pub fn at(&self, t: f64) -> Point3 {
+        self.origin + (self.dir * t)
     }
 }
