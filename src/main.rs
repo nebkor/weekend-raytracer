@@ -13,7 +13,7 @@ use std::path::Path;
 const NX: u32 = 800;
 const NY: u32 = 400;
 const NS: u32 = 100;
-const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
+const SF: f64 = 255.99; // scaling factor for converting color64 to u8
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -86,7 +86,7 @@ fn main() {
             let col = color(&r);
 
             let c = col * SF;
-            let v: Coloru8 = c.cast();
+            let v: Color8 = c.cast();
             data.extend_from_slice(v.to_array().as_ref());
         }
     }

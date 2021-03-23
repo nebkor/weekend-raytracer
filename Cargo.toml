@@ -5,11 +5,12 @@ authors = ["Joe Ardent <code@ardent.nebcorp.com>"]
 edition = "2018"
 
 [dependencies]
-rand = "*"
+rand = { version = "*", features=["small_rng"] }
 png = "*"
 euclid = "*"
 clap = "*"
 chrono = "0.4.19"
+
 
 [profile.dev]
 opt-level = 3
