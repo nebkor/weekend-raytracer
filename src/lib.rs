@@ -23,18 +23,26 @@ pub fn random_unit_point<R: Rng>(r: &mut R) -> Point3 {
     p
 }
 
-pub fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+pub fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
     let oc = *r.origin() - *center;
     let a = r.direction().square_length();
-    let b = oc.dot(*r.direction()) * 2.0;
+    let half_b = oc.dot(*r.direction());
     let c = oc.square_length() - radius.powi(2);
-    let discrm = b.powi(2) - 4.0 * a * c;
-    discrm > 0.0
+    let discrm = half_b.powi(2) - a * c;
+    if discrm < 0.0 {
+        -1.0
+    } else {
+        (-half_b - discrm.sqrt()) / a
+    }
 }
 
 pub fn color(r: &Ray) -> Color {
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, &r) {
-        Color::new(1.0, 0.0, 0.0)
+    let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, &r);
+    if t > 0.0 {
+        let n = (r.at(t) - Vec3::new(0.0, 0.0, -1.0)).normalize();
+        // the reason to add one to each component and then divide the vector by two is to make sure all values
+        // are positive when it gets cast to a coloru8.
+        Color::new(n.x as f32 + 1.0, n.y as f32 + 1.0, n.z as f32 + 1.0) / 2.0
     } else {
         let unit = r.direction().normalize();
         let t = 0.5 * (unit.y + 1.) as f32;

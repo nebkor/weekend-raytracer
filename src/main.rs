@@ -17,7 +17,7 @@ const SF: f32 = 255.99; // scaling factor for converting colorf32 to u8
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const CHAPTER: &str = "chapter5";
+const CHAPTER: &str = "chapter6";
 
 fn write_png(out: &str, framebuffer: &[u8]) {
     let pngfile = format!("{}.png", out);
