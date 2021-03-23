@@ -27,5 +27,5 @@ pub fn color(r: &Ray) -> Color {
     let unit = r.direction().normalize();
     let t = 0.5 * (unit.y + 1.) as f32;
     // interpolate between blue at the top and white at the bottom
-    (Color::new(1., 1., 1.) * (1.0 - t) + Color::new(0.5, 0.7, 1.0)) * t
+    (Color::new(1., 1., 1.) * (1.0 - t)) + (Color::new(0.5, 0.7, 1.0) * t)
 }

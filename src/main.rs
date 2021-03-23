@@ -75,7 +75,7 @@ fn main() {
         origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_len);
 
     // Now the real rendering work:
-    for j in (0..NY) {
+    for j in (0..NY).rev() {
         for i in 0..NX {
             let u = i as f64 / WIDTH;
             let v = j as f64 / HEIGHT;
