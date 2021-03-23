@@ -11,6 +11,9 @@ pub type Vec3 = Vector3D<f64, ()>;
 mod ray;
 pub use ray::*;
 
+mod illumable;
+pub use illumable::*;
+
 pub fn random_unit_point<R: Rng>(r: &mut R) -> Point3 {
     let mut p: Point3;
     let one = Point3::new(1.0, 1.0, 1.0);
