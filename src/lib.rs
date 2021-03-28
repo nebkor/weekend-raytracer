@@ -18,6 +18,8 @@ pub use ray::*;
 mod sphere;
 pub use sphere::*;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub fn d2r(d: f64) -> f64 {
     (d * PI) / 180.0
 }
@@ -76,4 +78,19 @@ pub fn write_png(out: &str, framebuffer: &[u8], width: u32, height: u32) {
     writer.write_image_data(framebuffer).unwrap();
 
     println!("Wrote to {:?}.", path);
+}
+
+use clap::{App, Arg, ArgMatches};
+pub fn get_args(default_file: &str) -> ArgMatches<'_> {
+    let args = App::new("Weekend Raytracer")
+        .version(VERSION)
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("Sets the basename of the PNG output file.")
+                .required(false)
+                .default_value(&default_file)
+                .index(1),
+        )
+        .get_matches();
+    args
 }

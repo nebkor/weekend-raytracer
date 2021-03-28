@@ -1,38 +1,26 @@
 use raytracer::*;
 
 use chrono::Local;
-use clap::{App, Arg};
 
 const NX: u32 = 800;
 const NY: u32 = 400;
-const NS: u32 = 100;
+const NS: u32 = 50;
 const SF: f64 = 255.99; // scaling factor for converting color64 to u8
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const CHAPTER: &str = "chapter7";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
     let default_file = format!("{}/{}", CHAPTER, now);
-    let args = App::new("Weekend Raytracer")
-        .version(VERSION)
-        .arg(
-            Arg::with_name("OUTPUT")
-                .help("Sets the basename of the PNG output file.")
-                .required(false)
-                .default_value(&default_file)
-                .index(1),
-        )
-        .get_matches();
-
+    let args = get_args(&default_file);
     let outfile = args.value_of("OUTPUT").unwrap();
 
-    let mut data: Vec<u8> = Vec::with_capacity(NX as usize * NY as usize * 4);
+    let capacity = (NX * NY * 3) as usize;
+    let mut data: Vec<u8> = Vec::with_capacity(capacity);
 
-    let WIDTH = NX as f64;
-    let HEIGHT = NY as f64;
-    let ratio = WIDTH / HEIGHT;
+    let img_width = NX as f64;
+    let img_height = NY as f64;
+    let ratio = img_width / img_height;
 
     // set up our world
     let mut big_rng = thread_rng();
@@ -66,8 +54,8 @@ fn main() {
         for i in 0..NX {
             let mut col = Color64::default();
             for _ in 0..NS {
-                let u: f64 = (i as f64 + smol_rng.gen::<f64>()) / WIDTH;
-                let v: f64 = (j as f64 + smol_rng.gen::<f64>()) / HEIGHT;
+                let u: f64 = (i as f64 + smol_rng.gen::<f64>()) / img_width;
+                let v: f64 = (j as f64 + smol_rng.gen::<f64>()) / img_height;
                 let r = Ray::new(
                     origin,
                     lower_left_corner + horizontal * u + vertical * v - origin,
