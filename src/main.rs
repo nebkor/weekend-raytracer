@@ -1,14 +1,7 @@
 use raytracer::*;
 
 use chrono::Local;
-use png;
-
-extern crate clap;
 use clap::{App, Arg};
-
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
 
 const NX: u32 = 800;
 const NY: u32 = 400;
@@ -18,26 +11,6 @@ const SF: f64 = 255.99; // scaling factor for converting color64 to u8
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const CHAPTER: &str = "chapter6";
-
-fn write_png(out: &str, framebuffer: &[u8]) {
-    let pngfile = format!("{}.png", out);
-    let path = Path::new(&pngfile);
-
-    let file = match File::create(path) {
-        Ok(f) => f,
-        Err(e) => panic!("got {:?} we r ded", e),
-    };
-
-    let w = BufWriter::new(file);
-    let mut encoder = png::Encoder::new(w, NX, NY); // Width is nx pixels and height is ny
-    encoder.set_color(png::ColorType::RGB);
-    encoder.set_depth(png::BitDepth::Eight);
-    let mut writer = encoder.write_header().unwrap();
-
-    writer.write_image_data(framebuffer).unwrap();
-
-    println!("Wrote to {:?}.", path);
-}
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -103,5 +76,5 @@ fn main() {
         }
     }
 
-    write_png(outfile, data.as_ref());
+    write_png(outfile, data.as_ref(), NX, NY);
 }

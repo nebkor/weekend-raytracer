@@ -1,4 +1,9 @@
-// use std::f64::MAX as FMAX;
+pub use std::f64::consts::PI;
+pub use std::f64::MAX as FMAX;
+
+use std::fs::File;
+use std::io::BufWriter;
+use std::path::Path;
 
 use euclid::{Point3D, UnknownUnit, Vector3D};
 pub use rand::prelude::*;
@@ -7,9 +12,6 @@ pub type Color64 = Vector3D<f64, UnknownUnit>;
 pub type Color8 = Vector3D<u8, UnknownUnit>;
 pub type Point3 = Point3D<f64, UnknownUnit>;
 pub type Vec3 = Vector3D<f64, UnknownUnit>;
-
-pub const PI: f64 = std::f64::consts::PI;
-pub const FMAX: f64 = std::f64::MAX;
 
 mod ray;
 pub use ray::*;
@@ -54,4 +56,24 @@ pub fn color(r: &Ray, world: &[Sphere]) -> Color64 {
         // interpolate between blue at the top and white at the bottom
         (Color64::new(1., 1., 1.) * (1.0 - t)) + (Color64::new(0.5, 0.7, 1.0) * t)
     }
+}
+
+pub fn write_png(out: &str, framebuffer: &[u8], width: u32, height: u32) {
+    let pngfile = format!("{}.png", out);
+    let path = Path::new(&pngfile);
+
+    let file = match File::create(path) {
+        Ok(f) => f,
+        Err(e) => panic!("got {:?} we r ded", e),
+    };
+
+    let w = BufWriter::new(file);
+    let mut encoder = png::Encoder::new(w, width, height); // Width is nx pixels and height is ny
+    encoder.set_color(png::ColorType::RGB);
+    encoder.set_depth(png::BitDepth::Eight);
+    let mut writer = encoder.write_header().unwrap();
+
+    writer.write_image_data(framebuffer).unwrap();
+
+    println!("Wrote to {:?}.", path);
 }

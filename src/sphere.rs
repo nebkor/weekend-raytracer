@@ -1,4 +1,4 @@
-use crate::{Glint, Illumable, Point3, Ray, Vec3};
+use crate::{Glint, Illumable, Point3, Ray};
 
 pub struct Sphere {
     pub center: Point3,
@@ -48,7 +48,7 @@ impl Illumable for &[Sphere] {
         for sphere in self.iter() {
             if let Some(glnt) = sphere.shine(r, t_range.clone()) {
                 t_range.end = glnt.t;
-                glint = Some(glnt)
+                glint = Some(glnt);
             }
         }
         glint
