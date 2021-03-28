@@ -4,10 +4,10 @@ use chrono::Local;
 
 const NX: u32 = 800;
 const NY: u32 = 400;
-const NS: u32 = 50;
-const SF: f64 = 255.99; // scaling factor for converting color64 to u8
+const NS: u32 = 60;
+const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter7";
+const CHAPTER: &str = "chapter8";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -23,9 +23,6 @@ fn main() {
     let ratio = img_width / img_height;
 
     // set up our world
-    let mut big_rng = thread_rng();
-    let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
-
     let world = vec![
         Sphere {
             center: Point3::new(0.0, 0.0, -1.0),
@@ -48,6 +45,10 @@ fn main() {
     let lower_left_corner =
         origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_len);
 
+    // we'll need some random numbers
+    let mut big_rng = thread_rng();
+    let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
+
     // Now the real rendering work:
     let unsat = 1.0 / NS as f64;
     for j in (0..NY).rev() {
@@ -60,18 +61,15 @@ fn main() {
                     origin,
                     lower_left_corner + horizontal * u + vertical * v - origin,
                 );
-                col += color(&r, &world);
+                col += color(&r, &world, &mut smol_rng, MAX_BOUNCES);
             }
-            col *= unsat;
             let col = col
                 .to_array()
                 .iter()
-                .map(|elem| elem.clamp(0.0, 0.99999))
-                .collect::<Vec<f64>>();
-            let col = Color64::new(col[0], col[1], col[2]);
-            let c = col * SF;
-            let v: Color8 = c.cast();
-            data.extend_from_slice(v.to_array().as_ref());
+                .map(|elem| ((elem * unsat).sqrt().clamp(0.0, CLAMP_MAX) * SF) as u8)
+                .collect::<Vec<u8>>();
+            let col = Color8::new(col[0], col[1], col[2]);
+            data.extend_from_slice(col.to_array().as_ref());
         }
     }
 

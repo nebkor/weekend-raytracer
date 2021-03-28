@@ -19,12 +19,14 @@ mod sphere;
 pub use sphere::*;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const MAX_BOUNCES: i8 = 50;
+pub const CLAMP_MAX: f64 = 1.0 - std::f64::EPSILON;
 
 pub fn d2r(d: f64) -> f64 {
     (d * PI) / 180.0
 }
 
-pub fn random_unit_point(r: &mut SmallRng) -> Point3 {
+pub fn random_unit_point(r: &mut impl Rng) -> Point3 {
     let mut p: Vec3;
     let one = Vec3::one();
     loop {
@@ -36,22 +38,15 @@ pub fn random_unit_point(r: &mut SmallRng) -> Point3 {
     p.to_point()
 }
 
-pub fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = *r.origin() - *center;
-    let a = r.direction().square_length();
-    let half_b = oc.dot(*r.direction());
-    let c = oc.square_length() - radius.powi(2);
-    let discrm = half_b.powi(2) - a * c;
-    if discrm < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discrm.sqrt()) / a
+pub fn color(r: &Ray, world: &[Sphere], rng: &mut impl Rng, depth: i8) -> Color64 {
+    if depth < 1 {
+        return Color64::zero();
     }
-}
 
-pub fn color(r: &Ray, world: &[Sphere]) -> Color64 {
-    if let Some(glint) = world.shine(r, 0.0..FMAX) {
-        (glint.normal + Color64::one()) / 2.0
+    if let Some(glint) = world.shine(r, 0.01..FMAX) {
+        let target = glint.p + glint.normal + random_unit_point(rng).to_vector().normalize(); // true Lambertian requires normalizing
+        let ray = Ray::new(glint.p, target - glint.p);
+        color(&ray, world, rng, depth - 1) / 2.0
     } else {
         let unit = r.direction().normalize();
         let t = 0.5 * (unit.y + 1.);
@@ -70,7 +65,7 @@ pub fn write_png(out: &str, framebuffer: &[u8], width: u32, height: u32) {
     };
 
     let w = BufWriter::new(file);
-    let mut encoder = png::Encoder::new(w, width, height); // Width is nx pixels and height is ny
+    let mut encoder = png::Encoder::new(w, width, height);
     encoder.set_color(png::ColorType::RGB);
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
