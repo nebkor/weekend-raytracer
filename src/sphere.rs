@@ -41,7 +41,7 @@ impl Illumable for Sphere {
     }
 }
 
-impl Illumable for Vec<Sphere> {
+impl Illumable for &[Sphere] {
     fn shine(&self, r: &Ray, t_range: std::ops::Range<f64>) -> Option<Glint> {
         let mut t_range = t_range;
         let mut glint: Option<Glint> = None;

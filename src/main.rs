@@ -63,6 +63,18 @@ fn main() {
     let HEIGHT = NY as f64;
     let ratio = WIDTH / HEIGHT;
 
+    // set up our world
+    let world = vec![
+        Sphere {
+            center: Point3::new(0.0, 0.0, -1.0),
+            radius: 0.5,
+        },
+        Sphere {
+            center: Point3::new(0.0, -100.5, -1.0),
+            radius: 100.0,
+        },
+    ];
+
     // fake out a camera
     let viewport_h = 2.0;
     let viewport_w = ratio * viewport_h;
@@ -83,7 +95,7 @@ fn main() {
                 origin,
                 lower_left_corner + horizontal * u + vertical * v - origin,
             );
-            let col = color(&r);
+            let col = color(&r, &world);
 
             let c = col * SF;
             let v: Color8 = c.cast();
