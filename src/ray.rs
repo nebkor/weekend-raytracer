@@ -1,4 +1,4 @@
-use crate::{Point3, Vec3};
+use crate::{MatPtr, Point3, Vec3};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray {
@@ -25,15 +25,25 @@ impl Ray {
 }
 
 // "hit record", though that's a good pun-y name too
-#[derive(Default, Debug)]
 pub struct Glint {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: MatPtr,
     pub t: f64,
     pub front_facing: bool,
 }
 
 impl Glint {
+    pub fn new(p: Point3, t: f64, material: MatPtr) -> Self {
+        Glint {
+            p,
+            material,
+            normal: Vec3::default(),
+            t,
+            front_facing: false,
+        }
+    }
+
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
         if ray.direction().dot(outward_normal) < 0.0 {
             // we're front-facing

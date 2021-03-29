@@ -7,7 +7,7 @@ const NY: u32 = 400;
 const NS: u32 = 60;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter8";
+const CHAPTER: &str = "chapter9";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -23,14 +23,27 @@ fn main() {
     let ratio = img_width / img_height;
 
     // set up our world
+    let mut big_rng = thread_rng();
     let world = vec![
+        // center sphere
         Sphere {
             center: Point3::new(0.0, 0.0, -1.0),
             radius: 0.5,
+            material: Lambertian::new(
+                Color64::new(0.7, 0.3, 0.3),
+                SmallRng::from_rng(&mut big_rng).unwrap(),
+            )
+            .mat_ptr(),
         },
+        // ground sphere
         Sphere {
             center: Point3::new(0.0, -100.5, -1.0),
             radius: 100.0,
+            material: Lambertian::new(
+                Color64::new(0.8, 0.8, 0.0),
+                SmallRng::from_rng(&mut big_rng).unwrap(),
+            )
+            .mat_ptr(),
         },
     ];
 
@@ -46,7 +59,6 @@ fn main() {
         origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_len);
 
     // we'll need some random numbers
-    let mut big_rng = thread_rng();
     let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
 
     // Now the real rendering work:

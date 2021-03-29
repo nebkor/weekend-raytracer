@@ -1,8 +1,9 @@
-use crate::{Glint, Illumable, Point3, Ray};
+use crate::{Glint, Illumable, MatPtr, Point3, Ray};
 
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub material: MatPtr,
 }
 
 impl Illumable for Sphere {
@@ -29,12 +30,9 @@ impl Illumable for Sphere {
             return None;
         };
 
-        let mut glint = Glint::default();
-
         let pnt = r.at(root);
         let normal = (pnt - self.center) / self.radius;
-        glint.p = pnt;
-        glint.t = root;
+        let mut glint = Glint::new(pnt, root, self.material.clone());
         glint.set_face_normal(&r, normal);
 
         Some(glint)

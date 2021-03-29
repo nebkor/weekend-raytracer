@@ -17,6 +17,8 @@ mod ray;
 pub use ray::*;
 mod sphere;
 pub use sphere::*;
+mod material;
+pub use material::*;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const MAX_BOUNCES: i8 = 50;
@@ -44,9 +46,13 @@ pub fn color(r: &Ray, world: &[Sphere], rng: &mut impl Rng, depth: i8) -> Color6
     }
 
     if let Some(glint) = world.shine(r, 0.01..FMAX) {
-        let target = glint.p + glint.normal + random_unit_point(rng).to_vector().normalize(); // true Lambertian requires normalizing
-        let ray = Ray::new(glint.p, target - glint.p);
-        color(&ray, world, rng, depth - 1) / 2.0
+        if let Some(scatter) = glint.material.borrow().scatter(r, &glint) {
+            scatter
+                .attenuation
+                .mult(color(&scatter.ray, world, rng, depth - 1))
+        } else {
+            Color64::zero()
+        }
     } else {
         let unit = r.direction().normalize();
         let t = 0.5 * (unit.y + 1.);
@@ -88,4 +94,15 @@ pub fn get_args(default_file: &str) -> ArgMatches<'_> {
         )
         .get_matches();
     args
+}
+
+// maybe move this to a utils module or something?
+trait Mult {
+    fn mult(&self, rhs: Self) -> Self;
+}
+
+impl Mult for Color64 {
+    fn mult(&self, rhs: Self) -> Self {
+        Color64::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z)
+    }
 }
