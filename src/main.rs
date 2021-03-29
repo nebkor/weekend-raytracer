@@ -37,6 +37,26 @@ fn main() {
             radius: 100.0,
             material: Lambertian::new(Color64::new(0.8, 0.8, 0.0)).mat_ptr(),
         },
+        // left, silver sphere
+        Sphere {
+            center: Point3::new(-1.0, 0.0, -1.0),
+            radius: 0.5,
+            material: Metal {
+                albedo: Color64::new(0.8, 0.8, 0.8),
+                fuzz: 0.3,
+            }
+            .mat_ptr(),
+        },
+        // right, gold sphere
+        Sphere {
+            center: Point3::new(1.0, 0.0, -1.0),
+            radius: 0.5,
+            material: Metal {
+                albedo: Color64::new(0.8, 0.6, 0.2),
+                fuzz: 1.0,
+            }
+            .mat_ptr(),
+        },
     ];
 
     // fake out a camera

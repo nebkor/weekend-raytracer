@@ -1,4 +1,4 @@
-use crate::{random_unit_point, Color64, Glint, Ray};
+use crate::{random_unit_point, Color64, Glint, Ray, Vec3};
 use rand::rngs::SmallRng;
 
 use std::rc::Rc;
@@ -45,5 +45,38 @@ impl Material for Lambertian {
             ray,
             attenuation: self.albedo,
         })
+    }
+}
+
+pub struct Metal {
+    pub albedo: Color64,
+    pub fuzz: f64,
+}
+
+impl Metal {
+    pub fn mat_ptr(self) -> MatPtr {
+        Rc::new(Box::new(self))
+    }
+}
+
+fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
+    *incident - (*normal * (2.0 * incident.dot(*normal)))
+}
+
+impl Material for Metal {
+    fn scatter(&self, ray_in: &Ray, glint: &Glint, rng: &mut SmallRng) -> Option<Scatter> {
+        let reflected = reflect(&ray_in.direction().normalize(), &glint.normal);
+        let scattered = Ray::new(
+            glint.p,
+            reflected + random_unit_point(rng).to_vector() * self.fuzz,
+        );
+        if reflected.dot(glint.normal) > 0.0 {
+            Some(Scatter {
+                ray: scattered,
+                attenuation: self.albedo,
+            })
+        } else {
+            None
+        }
     }
 }

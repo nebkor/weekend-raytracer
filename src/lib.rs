@@ -49,7 +49,7 @@ pub fn color(r: &Ray, world: &[Sphere], rng: &mut SmallRng, depth: i8) -> Color6
         if let Some(scatter) = glint.material.scatter(r, &glint, rng) {
             scatter
                 .attenuation
-                .mult(color(&scatter.ray, world, rng, depth - 1))
+                .component_mul(color(&scatter.ray, world, rng, depth - 1))
         } else {
             Color64::zero()
         }
@@ -94,15 +94,4 @@ pub fn get_args(default_file: &str) -> ArgMatches<'_> {
         )
         .get_matches();
     args
-}
-
-// maybe move this to a utils module or something?
-trait Mult {
-    fn mult(&self, rhs: Self) -> Self;
-}
-
-impl Mult for Color64 {
-    fn mult(&self, rhs: Self) -> Self {
-        Color64::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z)
-    }
 }
