@@ -29,21 +29,13 @@ fn main() {
         Sphere {
             center: Point3::new(0.0, 0.0, -1.0),
             radius: 0.5,
-            material: Lambertian::new(
-                Color64::new(0.7, 0.3, 0.3),
-                SmallRng::from_rng(&mut big_rng).unwrap(),
-            )
-            .mat_ptr(),
+            material: Lambertian::new(Color64::new(0.7, 0.3, 0.3)).mat_ptr(),
         },
         // ground sphere
         Sphere {
             center: Point3::new(0.0, -100.5, -1.0),
             radius: 100.0,
-            material: Lambertian::new(
-                Color64::new(0.8, 0.8, 0.0),
-                SmallRng::from_rng(&mut big_rng).unwrap(),
-            )
-            .mat_ptr(),
+            material: Lambertian::new(Color64::new(0.8, 0.8, 0.0)).mat_ptr(),
         },
     ];
 

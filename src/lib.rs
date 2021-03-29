@@ -40,13 +40,13 @@ pub fn random_unit_point(r: &mut impl Rng) -> Point3 {
     p.to_point()
 }
 
-pub fn color(r: &Ray, world: &[Sphere], rng: &mut impl Rng, depth: i8) -> Color64 {
+pub fn color(r: &Ray, world: &[Sphere], rng: &mut SmallRng, depth: i8) -> Color64 {
     if depth < 1 {
         return Color64::zero();
     }
 
     if let Some(glint) = world.shine(r, 0.01..FMAX) {
-        if let Some(scatter) = glint.material.borrow().scatter(r, &glint) {
+        if let Some(scatter) = glint.material.scatter(r, &glint, rng) {
             scatter
                 .attenuation
                 .mult(color(&scatter.ray, world, rng, depth - 1))
