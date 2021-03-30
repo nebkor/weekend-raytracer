@@ -2,9 +2,9 @@ use raytracer::*;
 
 use chrono::Local;
 
-const NX: u32 = 800;
-const NY: u32 = 400;
-const NS: u32 = 60;
+const NX: u32 = 1000;
+const NY: u32 = 500;
+const NS: u32 = 80;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
 const CHAPTER: &str = "chapter10";
@@ -38,7 +38,7 @@ fn main() {
             radius: 100.0,
             material: Lambertian::new(Color64::new(0.8, 0.8, 0.0)).mat_ptr(),
         },
-        // left, silver sphere
+        // left, glass sphere
         Sphere {
             center: Point3::new(-1.0, 0.0, -1.0),
             radius: 0.5,
@@ -48,6 +48,12 @@ fn main() {
             //     fuzz: 0.3,
             // }
             // .mat_ptr(),
+        },
+        // inside the other left sphere, negative glass
+        Sphere {
+            center: Point3::new(-1.0, 0.0, -1.0),
+            radius: -0.4,
+            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
         },
         // right, gold sphere
         Sphere {
