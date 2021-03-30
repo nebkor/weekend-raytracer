@@ -93,6 +93,7 @@ impl Dialectric {
 }
 
 fn refract(incident: &Vec3, normal: &Vec3, etais: f64) -> Vec3 {
+    // incident is a unit vector
     let cos = ((*incident * -1.0).dot(*normal)).min(1.0);
     let perp: Vec3 = (*incident + (*normal * cos)) * etais;
     let para: Vec3 = *normal * (1.0 - perp.square_length()).sqrt() * -1.0;
@@ -100,15 +101,24 @@ fn refract(incident: &Vec3, normal: &Vec3, etais: f64) -> Vec3 {
 }
 
 impl Material for Dialectric {
-    fn scatter(&self, ray_in: &Ray, glint: &Glint, rng: &mut SmallRng) -> Option<Scatter> {
+    fn scatter(&self, ray_in: &Ray, glint: &Glint, _rng: &mut SmallRng) -> Option<Scatter> {
         let ratio = if glint.front_facing {
             self.i_o_r.powi(-1)
         } else {
             self.i_o_r
         };
         let unit_incident = ray_in.direction().normalize();
-        let refracted = refract(&unit_incident, &glint.normal, ratio);
-        let ray_out = Ray::new(glint.p, refracted);
+        let cos = ((unit_incident * -1.0).dot(glint.normal)).min(1.0);
+        let sin = (1.0 - cos.powi(2)).sqrt();
+
+        let dir = if (ratio * sin) > 1.0 {
+            // we can't refract, we're internally reflecting
+            reflect(&unit_incident, &glint.normal)
+        } else {
+            refract(&unit_incident, &glint.normal, ratio)
+        };
+
+        let ray_out = Ray::new(glint.p, dir);
 
         Some(Scatter {
             attenuation: Color64::one(),

@@ -29,8 +29,8 @@ fn main() {
         Sphere {
             center: Point3::new(0.0, 0.0, -1.0),
             radius: 0.5,
-            // material: Lambertian::new(Color64::new(0.7, 0.3, 0.3)).mat_ptr(),
-            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
+            material: Lambertian::new(Color64::new(0.1, 0.2, 0.5)).mat_ptr(),
+            //material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
         },
         // ground sphere
         Sphere {
@@ -55,7 +55,7 @@ fn main() {
             radius: 0.5,
             material: Metal {
                 albedo: Color64::new(0.8, 0.6, 0.2),
-                fuzz: 1.0,
+                fuzz: 0.0,
             }
             .mat_ptr(),
         },
