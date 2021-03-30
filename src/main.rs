@@ -7,11 +7,11 @@ const NY: u32 = 500;
 const NS: u32 = 80;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter11";
+const CHAPTER: &str = "chapter12";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
-    let default_file = format!("{}/{}", CHAPTER, now);
+    let default_file = format!("{}-{}", CHAPTER, now);
     let args = get_args(&default_file);
     let outfile = args.value_of("OUTPUT").unwrap();
 
@@ -62,12 +62,18 @@ fn main() {
         },
     ];
 
+    let cam_origin = Point3::new(3.0, 3.0, 2.0);
+    let look_at = Point3::new(0.0, 0.0, -1.0);
+    let focus_dist = (cam_origin - look_at).length();
+    let aperture = 2.0;
     let camera = Camera::new(
-        Point3::new(-2.0, 2.0, 1.0),
-        Point3::new(0.0, 0.0, -1.0),
-        Vec3::new(0.0, 1.0, 0.0),
-        20.0,
+        cam_origin,
+        look_at,
+        Vec3::new(0.0, 1.0, 0.0), // up
+        20.0,                     // vfov in degrees
         ratio,
+        aperture,
+        focus_dist,
     );
 
     // we'll need some random numbers
@@ -81,7 +87,7 @@ fn main() {
             for _ in 0..NS {
                 let u: f64 = (i as f64 + smol_rng.gen::<f64>()) / img_width;
                 let v: f64 = (j as f64 + smol_rng.gen::<f64>()) / img_height;
-                let r = camera.get_ray(u, v);
+                let r = camera.get_ray(u, v, &mut smol_rng);
                 col += color(&r, &world, &mut smol_rng, MAX_BOUNCES);
             }
             let col = col

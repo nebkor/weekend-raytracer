@@ -42,6 +42,17 @@ pub fn random_unit_point(r: &mut impl Rng) -> Point3 {
     p.to_point()
 }
 
+pub fn random_unit_disk(rng: &mut SmallRng) -> Point3 {
+    let mut p: Vec3;
+    loop {
+        p = Vec3::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0), 0.0);
+        if p.square_length() < 1.0 {
+            break;
+        }
+    }
+    p.to_point()
+}
+
 pub fn color(r: &Ray, world: &[Sphere], rng: &mut SmallRng, depth: i8) -> Color64 {
     if depth < 1 {
         return Color64::zero();
