@@ -7,7 +7,7 @@ const NY: u32 = 500;
 const NS: u32 = 80;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter10";
+const CHAPTER: &str = "chapter11";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -43,11 +43,6 @@ fn main() {
             center: Point3::new(-1.0, 0.0, -1.0),
             radius: 0.5,
             material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
-            // material: Metal {
-            //     albedo: Color64::new(0.8, 0.8, 0.8),
-            //     fuzz: 0.3,
-            // }
-            // .mat_ptr(),
         },
         // inside the other left sphere, negative glass
         Sphere {
@@ -67,16 +62,13 @@ fn main() {
         },
     ];
 
-    // fake out a camera
-    let viewport_h = 2.0;
-    let viewport_w = ratio * viewport_h;
-    let focal_len = 1.0;
-
-    let origin = Point3::default();
-    let horizontal = Vec3::new(viewport_w, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_h, 0.0);
-    let lower_left_corner =
-        origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_len);
+    let camera = Camera::new(
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        ratio,
+    );
 
     // we'll need some random numbers
     let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
@@ -89,10 +81,7 @@ fn main() {
             for _ in 0..NS {
                 let u: f64 = (i as f64 + smol_rng.gen::<f64>()) / img_width;
                 let v: f64 = (j as f64 + smol_rng.gen::<f64>()) / img_height;
-                let r = Ray::new(
-                    origin,
-                    lower_left_corner + horizontal * u + vertical * v - origin,
-                );
+                let r = camera.get_ray(u, v);
                 col += color(&r, &world, &mut smol_rng, MAX_BOUNCES);
             }
             let col = col

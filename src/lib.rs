@@ -19,6 +19,8 @@ mod sphere;
 pub use sphere::*;
 mod material;
 pub use material::*;
+mod camera;
+pub use camera::*;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const MAX_BOUNCES: i8 = 50;
