@@ -80,3 +80,39 @@ impl Material for Metal {
         }
     }
 }
+
+pub struct Dialectric {
+    // index of refraction
+    pub i_o_r: f64,
+}
+
+impl Dialectric {
+    pub fn mat_ptr(self) -> MatPtr {
+        Rc::new(Box::new(self))
+    }
+}
+
+fn refract(incident: &Vec3, normal: &Vec3, etais: f64) -> Vec3 {
+    let cos = ((*incident * -1.0).dot(*normal)).min(1.0);
+    let perp: Vec3 = (*incident + (*normal * cos)) * etais;
+    let para: Vec3 = *normal * (1.0 - perp.square_length()).sqrt() * -1.0;
+    perp + para
+}
+
+impl Material for Dialectric {
+    fn scatter(&self, ray_in: &Ray, glint: &Glint, rng: &mut SmallRng) -> Option<Scatter> {
+        let ratio = if glint.front_facing {
+            self.i_o_r.powi(-1)
+        } else {
+            self.i_o_r
+        };
+        let unit_incident = ray_in.direction().normalize();
+        let refracted = refract(&unit_incident, &glint.normal, ratio);
+        let ray_out = Ray::new(glint.p, refracted);
+
+        Some(Scatter {
+            attenuation: Color64::one(),
+            ray: ray_out,
+        })
+    }
+}

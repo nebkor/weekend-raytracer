@@ -7,7 +7,7 @@ const NY: u32 = 400;
 const NS: u32 = 60;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter9";
+const CHAPTER: &str = "chapter10";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -29,7 +29,8 @@ fn main() {
         Sphere {
             center: Point3::new(0.0, 0.0, -1.0),
             radius: 0.5,
-            material: Lambertian::new(Color64::new(0.7, 0.3, 0.3)).mat_ptr(),
+            // material: Lambertian::new(Color64::new(0.7, 0.3, 0.3)).mat_ptr(),
+            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
         },
         // ground sphere
         Sphere {
@@ -41,11 +42,12 @@ fn main() {
         Sphere {
             center: Point3::new(-1.0, 0.0, -1.0),
             radius: 0.5,
-            material: Metal {
-                albedo: Color64::new(0.8, 0.8, 0.8),
-                fuzz: 0.3,
-            }
-            .mat_ptr(),
+            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
+            // material: Metal {
+            //     albedo: Color64::new(0.8, 0.8, 0.8),
+            //     fuzz: 0.3,
+            // }
+            // .mat_ptr(),
         },
         // right, gold sphere
         Sphere {
