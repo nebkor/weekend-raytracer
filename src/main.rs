@@ -2,12 +2,12 @@ use raytracer::*;
 
 use chrono::Local;
 
-const NX: u32 = 1000;
-const NY: u32 = 500;
-const NS: u32 = 80;
+const NX: u32 = 1800;
+const NY: u32 = 1200;
+const NS: u32 = 800;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 
-const CHAPTER: &str = "chapter12";
+const CHAPTER: &str = "chapter13";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -24,48 +24,13 @@ fn main() {
 
     // set up our world
     let mut big_rng = thread_rng();
-    let world = vec![
-        // center sphere
-        Sphere {
-            center: Point3::new(0.0, 0.0, -1.0),
-            radius: 0.5,
-            material: Lambertian::new(Color64::new(0.1, 0.2, 0.5)).mat_ptr(),
-            //material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
-        },
-        // ground sphere
-        Sphere {
-            center: Point3::new(0.0, -100.5, -1.0),
-            radius: 100.0,
-            material: Lambertian::new(Color64::new(0.8, 0.8, 0.0)).mat_ptr(),
-        },
-        // left, glass sphere
-        Sphere {
-            center: Point3::new(-1.0, 0.0, -1.0),
-            radius: 0.5,
-            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
-        },
-        // inside the other left sphere, negative glass
-        Sphere {
-            center: Point3::new(-1.0, 0.0, -1.0),
-            radius: -0.4,
-            material: Dialectric { i_o_r: 1.5 }.mat_ptr(),
-        },
-        // right, gold sphere
-        Sphere {
-            center: Point3::new(1.0, 0.0, -1.0),
-            radius: 0.5,
-            material: Metal {
-                albedo: Color64::new(0.8, 0.6, 0.2),
-                fuzz: 0.0,
-            }
-            .mat_ptr(),
-        },
-    ];
+    let world = random_scene(&mut big_rng);
 
-    let cam_origin = Point3::new(3.0, 3.0, 2.0);
-    let look_at = Point3::new(0.0, 0.0, -1.0);
-    let focus_dist = (cam_origin - look_at).length();
-    let aperture = 2.0;
+    // camera
+    let cam_origin = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let focus_dist = 10.0;
+    let aperture = 0.1;
     let camera = Camera::new(
         cam_origin,
         look_at,
@@ -76,7 +41,7 @@ fn main() {
         focus_dist,
     );
 
-    // we'll need some random numbers
+    // cheap rng for anti-alias calls
     let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
 
     // Now the real rendering work:
@@ -101,4 +66,80 @@ fn main() {
     }
 
     write_png(outfile, data.as_ref(), NX, NY);
+}
+
+fn random_scene(rng: &mut impl Rng) -> Vec<Sphere> {
+    let mut world = Vec::new();
+
+    let ground_material = Lambertian::new(Color64::new(0.5, 0.5, 0.5)).mat_ptr();
+    world.push(Sphere {
+        center: Point3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
+        material: ground_material,
+    });
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let a = a as f64;
+            let b = b as f64;
+            let choose_mat: f64 = rng.gen();
+            let center = Point3::new(a + 0.9 * rng.gen::<f64>(), 0.2, b + 0.9 * rng.gen::<f64>());
+            let focus = Point3::new(4.0, 0.2, 0.0);
+            if (center - focus).length() > 0.9 {
+                let sphere_material = if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color64::new(
+                        rng.gen::<f64>() * rng.gen::<f64>(),
+                        rng.gen::<f64>() * rng.gen::<f64>(),
+                        rng.gen::<f64>() * rng.gen::<f64>(),
+                    );
+                    Lambertian::new(albedo).mat_ptr()
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color64::new(
+                        rng.gen_range(0.0..0.5),
+                        rng.gen_range(0.0..0.5),
+                        rng.gen_range(0.0..0.5),
+                    );
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    Metal { albedo, fuzz }.mat_ptr()
+                } else {
+                    // glass
+                    Dialectric { i_o_r: 1.5 }.mat_ptr()
+                };
+                world.push(Sphere {
+                    center,
+                    radius: 0.2,
+                    material: sphere_material,
+                });
+            }
+        }
+    }
+
+    let material1 = Dialectric { i_o_r: 1.5 }.mat_ptr();
+    world.push(Sphere {
+        center: Point3::new(0.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material1,
+    });
+
+    let material2 = Lambertian::new(Color64::new(0.4, 0.2, 0.1)).mat_ptr();
+    world.push(Sphere {
+        center: Point3::new(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material2,
+    });
+
+    let material3 = Metal {
+        albedo: Color64::new(0.7, 0.6, 0.5),
+        fuzz: 0.0,
+    }
+    .mat_ptr();
+    world.push(Sphere {
+        center: Point3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material3,
+    });
+
+    world
 }
