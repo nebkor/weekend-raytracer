@@ -1,5 +1,11 @@
 use crate::{Glint, Illumable, MatPtr, Point3, Ray};
 
+use std::sync::Arc;
+
+unsafe impl Send for Sphere {}
+unsafe impl Sync for Sphere {}
+
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
@@ -32,7 +38,7 @@ impl Illumable for Sphere {
 
         let pnt = r.at(root);
         let normal = (pnt - self.center) / self.radius;
-        let mut glint = Glint::new(pnt, root, self.material.clone());
+        let mut glint = Glint::new(pnt, root, Arc::clone(&self.material));
         glint.set_face_normal(&r, normal);
 
         Some(glint)

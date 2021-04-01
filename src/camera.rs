@@ -2,6 +2,7 @@ use crate::{d2r, random_unit_disk, Point3, Ray, Vec3};
 
 use rand::rngs::SmallRng;
 
+#[derive(Clone)]
 pub struct Camera {
     origin: Point3,
     lower_left: Point3,

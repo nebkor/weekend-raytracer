@@ -1,13 +1,16 @@
+#![allow(clippy::many_single_char_names)]
 use raytracer::*;
 
 use chrono::Local;
+use crossbeam_utils::thread::scope;
 
 const NX: u32 = 1800;
 const NY: u32 = 1200;
 const NS: u32 = 800;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
+const NC: u32 = 3;
 
-const CHAPTER: &str = "chapter13";
+const CHAPTER: &str = "chapter14";
 
 fn main() {
     let now = format!("{}", Local::now().format("%Y%m%d_%H:%M:%S"));
@@ -16,18 +19,21 @@ fn main() {
     let outfile = args.value_of("OUTPUT").unwrap();
 
     let capacity = (NX * NY * 3) as usize;
-    let mut data: Vec<u8> = Vec::with_capacity(capacity);
+    let mut data: Vec<u8> = vec![0; capacity];
+
+    let chunk_size = NX * NC;
+    let num_threads = num_cpus::get_physical();
 
     let img_width = NX as f64;
     let img_height = NY as f64;
     let ratio = img_width / img_height;
 
     // set up our world
-    let mut big_rng = thread_rng();
-    let world = random_scene(&mut big_rng);
+    let mut rng = SmallRng::from_entropy();
+    let world = random_scene(&mut rng);
 
     // camera
-    let cam_origin = Point3::new(13.0, 2.0, 3.0);
+    let cam_origin = Point3::new(13.0, 2.5, 4.0);
     let look_at = Point3::new(0.0, 0.0, 0.0);
     let focus_dist = 10.0;
     let aperture = 0.1;
@@ -41,28 +47,51 @@ fn main() {
         focus_dist,
     );
 
-    // cheap rng for anti-alias calls
-    let mut smol_rng = SmallRng::from_rng(&mut big_rng).unwrap();
+    // make a new scope to ensure everything is tidied up, borrow-wise, by the time we need to write the outfile
+    {
+        let (sender, receiver) = crossbeam_channel::unbounded();
 
-    // Now the real rendering work:
-    let unsat = 1.0 / NS as f64;
-    for j in (0..NY).rev() {
-        for i in 0..NX {
-            let mut col = Color64::default();
-            for _ in 0..NS {
-                let u: f64 = (i as f64 + smol_rng.gen::<f64>()) / img_width;
-                let v: f64 = (j as f64 + smol_rng.gen::<f64>()) / img_height;
-                let r = camera.get_ray(u, v, &mut smol_rng);
-                col += color(&r, &world, &mut smol_rng, MAX_BOUNCES);
-            }
-            let col = col
-                .to_array()
-                .iter()
-                .map(|elem| ((elem * unsat).sqrt().clamp(0.0, CLAMP_MAX) * SF) as u8)
-                .collect::<Vec<u8>>();
-            let col = Color8::new(col[0], col[1], col[2]);
-            data.extend_from_slice(col.to_array().as_ref());
+        for (j, chunk) in data.chunks_mut(chunk_size as usize).enumerate() {
+            let j = (NY - 1) as usize - j;
+            sender.send((j, chunk)).unwrap();
         }
+
+        let unsat = 1.0 / NS as f64;
+        scope(|s| {
+            for _ in 0..num_threads {
+                let recv = receiver.clone();
+                let mut rng = rng.clone();
+                let camera = camera.clone();
+                let world = world.clone();
+                s.spawn(move |_| {
+                    while let Ok((j, buf)) = recv.try_recv() {
+                        for (i, pixel) in buf.chunks_mut(NC as usize).enumerate() {
+                            let i = i as f64;
+                            let j = j as f64;
+                            let mut col = Color64::zero();
+                            for _ in 0..NS {
+                                let u: f64 = (i + rng.gen::<f64>()) / img_width;
+                                let v: f64 = (j + rng.gen::<f64>()) / img_height;
+                                let r = camera.get_ray(u, v, &mut rng);
+                                col += color(&r, &world, &mut rng, MAX_BOUNCES);
+                            }
+                            let col = col
+                                .to_array()
+                                .iter()
+                                .map(|elem| {
+                                    ((elem * unsat).sqrt().clamp(0.0, CLAMP_MAX) * SF) as u8
+                                })
+                                .collect::<Vec<u8>>();
+                            pixel[0] = col[0];
+                            pixel[1] = col[1];
+                            pixel[2] = col[2];
+                        }
+                    }
+                });
+            }
+        })
+        .unwrap();
+        drop(sender);
     }
 
     write_png(outfile, data.as_ref(), NX, NY);

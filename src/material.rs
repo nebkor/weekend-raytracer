@@ -2,9 +2,9 @@ use crate::{random_unit_point, Color64, Glint, Ray, Vec3};
 use rand::rngs::SmallRng;
 use rand::Rng;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
-pub type MatPtr = Rc<Box<dyn Material>>;
+pub type MatPtr = Arc<Box<dyn Material + Send>>;
 
 pub struct Scatter {
     pub ray: Ray,
@@ -25,7 +25,7 @@ impl Lambertian {
     }
 
     pub fn mat_ptr(self) -> MatPtr {
-        Rc::new(Box::new(self))
+        Arc::new(Box::new(self))
     }
 }
 
@@ -56,7 +56,7 @@ pub struct Metal {
 
 impl Metal {
     pub fn mat_ptr(self) -> MatPtr {
-        Rc::new(Box::new(self))
+        Arc::new(Box::new(self))
     }
 }
 
@@ -89,7 +89,7 @@ pub struct Dialectric {
 
 impl Dialectric {
     pub fn mat_ptr(self) -> MatPtr {
-        Rc::new(Box::new(self))
+        Arc::new(Box::new(self))
     }
 }
 
