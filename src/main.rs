@@ -4,8 +4,10 @@ use raytracer::*;
 use chrono::Local;
 use crossbeam_utils::thread::scope;
 
-const NX: u32 = 1800;
-const NY: u32 = 1200;
+//const NX: u32 = 1800;
+//const NY: u32 = 1200;
+const NX: u32 = 1600;
+const NY: u32 = 900;
 const NS: u32 = 800;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
 const NC: u32 = 3;
@@ -35,8 +37,8 @@ fn main() {
     // camera
     let cam_origin = Point3::new(13.0, 2.5, 4.0);
     let look_at = Point3::new(0.0, 0.0, 0.0);
-    let focus_dist = 10.0;
-    let aperture = 0.1;
+    let focus_dist = cam_origin.to_vector().length();
+    let aperture = 0.01;
     let camera = Camera::new(
         cam_origin,
         look_at,
@@ -62,7 +64,7 @@ fn main() {
                 let recv = receiver.clone();
                 let mut rng = rng.clone();
                 let camera = camera.clone();
-                let world = world.clone();
+                let world = &world;
                 s.spawn(move |_| {
                     while let Ok((j, buf)) = recv.try_recv() {
                         for (i, pixel) in buf.chunks_mut(NC as usize).enumerate() {
@@ -73,7 +75,7 @@ fn main() {
                                 let u: f64 = (i + rng.gen::<f64>()) / img_width;
                                 let v: f64 = (j + rng.gen::<f64>()) / img_height;
                                 let r = camera.get_ray(u, v, &mut rng);
-                                col += color(&r, &world, &mut rng, MAX_BOUNCES);
+                                col += color(&r, world, &mut rng, MAX_BOUNCES);
                             }
                             let col = col
                                 .to_array()

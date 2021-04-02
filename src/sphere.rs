@@ -5,7 +5,6 @@ use std::sync::Arc;
 unsafe impl Send for Sphere {}
 unsafe impl Sync for Sphere {}
 
-#[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
