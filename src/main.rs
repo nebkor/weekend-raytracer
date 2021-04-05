@@ -6,11 +6,11 @@ use crossbeam_utils::thread::scope;
 
 //const NX: u32 = 1800;
 //const NY: u32 = 1200;
-const NX: u32 = 1600;
-const NY: u32 = 900;
-const NS: u32 = 800;
+const NX: u32 = (1600.0 / 2.5) as u32;
+const NY: u32 = (900.0 / 2.5) as u32;
+const NS: u32 = 100;
 const SF: f64 = 256.0; // scaling factor for converting color64 to u8
-const NC: u32 = 3;
+const NC: u32 = 3; // number of color channels
 
 const CHAPTER: &str = "chapter14";
 
@@ -47,6 +47,8 @@ fn main() {
         ratio,
         aperture,
         focus_dist,
+        0.0,
+        1.0,
     );
 
     // make a new scope to ensure everything is tidied up, borrow-wise, by the time we need to write the outfile
@@ -54,6 +56,7 @@ fn main() {
         let (sender, receiver) = crossbeam_channel::unbounded();
 
         for (j, chunk) in data.chunks_mut(chunk_size as usize).enumerate() {
+            // our first bytes are in the upper left, and positive y goes down in the rendered image
             let j = (NY - 1) as usize - j;
             sender.send((j, chunk)).unwrap();
         }
@@ -63,7 +66,7 @@ fn main() {
             for _ in 0..num_threads {
                 let recv = receiver.clone();
                 let mut rng = rng.clone();
-                let camera = camera.clone();
+                let camera = &camera;
                 let world = &world;
                 s.spawn(move |_| {
                     while let Ok((j, buf)) = recv.try_recv() {
@@ -104,27 +107,34 @@ fn random_scene(rng: &mut impl Rng) -> Vec<Sphere> {
 
     let ground_material = Lambertian::new(Color64::new(0.5, 0.5, 0.5)).mat_ptr();
     world.push(Sphere {
-        center: Point3::new(0.0, -1000.0, 0.0),
+        center_start: Point3::new(0.0, -1000.0, 0.0),
+        center_end: Point3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: ground_material,
+        t_start: 0.0,
+        t_end: 1.0,
     });
 
+    let spawn_point = Point3::new(4.0, 0.2, 0.0);
     for a in -11..11 {
         for b in -11..11 {
             let a = a as f64;
             let b = b as f64;
             let choose_mat: f64 = rng.gen();
-            let center = Point3::new(a + 0.9 * rng.gen::<f64>(), 0.2, b + 0.9 * rng.gen::<f64>());
-            let focus = Point3::new(4.0, 0.2, 0.0);
-            if (center - focus).length() > 0.9 {
-                let sphere_material = if choose_mat < 0.8 {
+            let center_start =
+                Point3::new(a + 0.9 * rng.gen::<f64>(), 0.2, b + 0.9 * rng.gen::<f64>());
+            if (center_start - spawn_point).length() > 0.9 {
+                let (sphere_material, center_end) = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color64::new(
                         rng.gen::<f64>() * rng.gen::<f64>(),
                         rng.gen::<f64>() * rng.gen::<f64>(),
                         rng.gen::<f64>() * rng.gen::<f64>(),
                     );
-                    Lambertian::new(albedo).mat_ptr()
+                    (
+                        Lambertian::new(albedo).mat_ptr(),
+                        center_start + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0),
+                    )
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color64::new(
@@ -133,15 +143,18 @@ fn random_scene(rng: &mut impl Rng) -> Vec<Sphere> {
                         rng.gen_range(0.0..0.5),
                     );
                     let fuzz = rng.gen_range(0.0..0.5);
-                    Metal { albedo, fuzz }.mat_ptr()
+                    (Metal { albedo, fuzz }.mat_ptr(), center_start)
                 } else {
                     // glass
-                    Dialectric { i_o_r: 1.5 }.mat_ptr()
+                    (Dialectric { i_o_r: 1.5 }.mat_ptr(), center_start)
                 };
                 world.push(Sphere {
-                    center,
+                    center_start,
+                    center_end,
                     radius: 0.2,
                     material: sphere_material,
+                    t_start: 0.0,
+                    t_end: 1.0,
                 });
             }
         }
@@ -149,16 +162,22 @@ fn random_scene(rng: &mut impl Rng) -> Vec<Sphere> {
 
     let material1 = Dialectric { i_o_r: 1.5 }.mat_ptr();
     world.push(Sphere {
-        center: Point3::new(0.0, 1.0, 0.0),
+        center_start: Point3::new(0.0, 1.0, 0.0),
+        center_end: Point3::new(0.0, 1.0, 0.0),
         radius: 1.0,
         material: material1,
+        t_start: 0.0,
+        t_end: 1.0,
     });
 
     let material2 = Lambertian::new(Color64::new(0.4, 0.2, 0.1)).mat_ptr();
     world.push(Sphere {
-        center: Point3::new(-4.0, 1.0, 0.0),
+        center_start: Point3::new(-4.0, 1.0, 0.0),
+        center_end: Point3::new(-4.0, 1.0, 0.0),
         radius: 1.0,
         material: material2,
+        t_start: 0.0,
+        t_end: 1.0,
     });
 
     let material3 = Metal {
@@ -167,9 +186,12 @@ fn random_scene(rng: &mut impl Rng) -> Vec<Sphere> {
     }
     .mat_ptr();
     world.push(Sphere {
-        center: Point3::new(4.0, 1.0, 0.0),
+        center_start: Point3::new(4.0, 1.0, 0.0),
+        center_end: Point3::new(4.0, 1.0, 0.0),
         radius: 1.0,
         material: material3,
+        t_start: 0.0,
+        t_end: 1.0,
     });
 
     world

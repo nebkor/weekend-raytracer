@@ -1,6 +1,7 @@
 use crate::{d2r, random_unit_disk, Point3, Ray, Vec3};
 
 use rand::rngs::SmallRng;
+use rand::Rng as _;
 
 #[derive(Clone)]
 pub struct Camera {
@@ -11,6 +12,8 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     lens_radius: f64,
+    open: f64,
+    close: f64,
 }
 
 impl Camera {
@@ -22,6 +25,8 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
+        open: f64,
+        close: f64,
     ) -> Self {
         let theta = d2r(vfov); // vfov is vertical field of view in degrees
         let h = (theta / 2.0).tan(); // TODO: is this really "height"? (probably)
@@ -45,6 +50,8 @@ impl Camera {
             u,
             v,
             lens_radius: aperture / 2.0,
+            open,
+            close,
         }
     }
 
@@ -56,6 +63,7 @@ impl Camera {
             self.lower_left.to_vector() + self.horizontal * s + self.vertical * t
                 - self.origin.to_vector()
                 - offset,
+            rng.gen_range(self.open..self.close),
         )
     }
 }

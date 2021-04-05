@@ -4,7 +4,7 @@ use rand::Rng;
 
 use std::sync::Arc;
 
-pub type MatPtr = Arc<Box<dyn Material + Send>>;
+pub type MatPtr = Arc<Box<dyn Material + Send + Sync>>;
 
 pub struct Scatter {
     pub ray: Ray,
@@ -32,7 +32,7 @@ impl Lambertian {
 impl Material for Lambertian {
     fn scatter(
         &self,
-        _ray_in: &Ray,
+        ray_in: &Ray,
         glint: &Glint,
         rng: &mut SmallRng,
     ) -> std::option::Option<Scatter> {
@@ -41,7 +41,7 @@ impl Material for Lambertian {
             // it'll fuck things up later if you have a near-zero-len scatter direction
             dir = glint.normal / 2.0;
         }
-        let ray = Ray::new(glint.p, dir);
+        let ray = Ray::new(glint.p, dir, ray_in.time());
         Some(Scatter {
             ray,
             attenuation: self.albedo,
@@ -70,6 +70,7 @@ impl Material for Metal {
         let scattered = Ray::new(
             glint.p,
             reflected + random_unit_point(rng).to_vector() * self.fuzz,
+            ray_in.time(),
         );
         if reflected.dot(glint.normal) > 0.0 {
             Some(Scatter {
@@ -125,7 +126,7 @@ impl Material for Dialectric {
             refract(&unit_incident, &glint.normal, ratio)
         };
 
-        let ray_out = Ray::new(glint.p, dir);
+        let ray_out = Ray::new(glint.p, dir, ray_in.time());
 
         Some(Scatter {
             attenuation: Color64::one(),

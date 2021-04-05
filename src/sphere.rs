@@ -2,18 +2,27 @@ use crate::{Glint, Illumable, MatPtr, Point3, Ray};
 
 use std::sync::Arc;
 
-unsafe impl Send for Sphere {}
-unsafe impl Sync for Sphere {}
-
 pub struct Sphere {
-    pub center: Point3,
+    pub center_start: Point3,
+    pub center_end: Point3,
     pub radius: f64,
     pub material: MatPtr,
+    pub t_start: f64,
+    pub t_end: f64,
+}
+
+impl Sphere {
+    pub fn center(&self, t: f64) -> Point3 {
+        self.center_start
+            + ((self.center_end - self.center_start) * (t - self.t_start)
+                / (self.t_end - self.t_start))
+    }
 }
 
 impl Illumable for Sphere {
     fn shine(&self, r: &Ray, t_range: std::ops::Range<f64>) -> Option<Glint> {
-        let oc = *r.origin() - self.center;
+        let r_time = r.time();
+        let oc = *r.origin() - self.center(r_time);
         let a = r.direction().square_length();
         let half_b = oc.dot(*r.direction());
         let c = oc.square_length() - self.radius.powi(2);
@@ -36,7 +45,7 @@ impl Illumable for Sphere {
         };
 
         let pnt = r.at(root);
-        let normal = (pnt - self.center) / self.radius;
+        let normal = (pnt - self.center(r_time)) / self.radius;
         let mut glint = Glint::new(pnt, root, Arc::clone(&self.material));
         glint.set_face_normal(&r, normal);
 
